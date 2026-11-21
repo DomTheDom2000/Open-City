@@ -2398,6 +2398,24 @@ function nearDrivingView(x,y,margin=200){
   (Math.abs(minidx)<=miniHalf+40&&Math.abs(minidy)<=miniHalf*mini.height/mini.width+40);
 }
 function protectVisibleVehicle(c){return nearDrivingView(c.x,c.y,240)||nearDrivingView(c.prevX,c.prevY,240);}
+const TRAFFIC_SPAWN_MARGIN=100,TRAFFIC_RETIRE_MARGIN=160;
+function trafficViewport(margin=0){
+ const hw=viewW/(2*zoom)+margin,hh=viewH/(2*zoom)+margin;
+ const aheadX=player.x+player.vx*200,aheadY=player.y+player.vy*200;
+ // Cover the camera now, its recent target and the next part of the drive.
+ return {
+  left:Math.min(camera.x,cameraTarget.x,player.x,aheadX)-hw,
+  right:Math.max(camera.x,cameraTarget.x,player.x,aheadX)+hw,
+  top:Math.min(camera.y,cameraTarget.y,player.y,aheadY)-hh,
+  bottom:Math.max(camera.y,cameraTarget.y,player.y,aheadY)+hh
+ };
+}
+function inTrafficViewport(view,x,y){
+ return x>=view.left&&x<=view.right&&y>=view.top&&y<=view.bottom;
+}
+function protectRoadTraffic(c,view=trafficViewport(TRAFFIC_RETIRE_MARGIN)){
+ return inTrafficViewport(view,c.x,c.y)||inTrafficViewport(view,c.prevX,c.prevY);
+}
 function polyRoute(points){let length=0;const segments=[];for(let n=0;n<points.length-1;n++){const p=points[n],q=points[n+1],dx=q.x-p.x,dy=q.y-p.y,len=Math.hypot(dx,dy);if(len<.01)continue;segments.push({x:p.x,y:p.y,dx,dy,len,start:length});length+=len;}return {segments,length};}
 function highwayRoute(axis,index,lane,direction){
  const coord=roadCoord(index,axis),center=axis===0?worldWindow.j:worldWindow.i,r=worldWindow.radius+3;
@@ -2422,7 +2440,8 @@ function chooseTrafficModel(roadType){
 }
 function trafficCandidate(route,distance,roadType,cruise,initial=false,gang=0){
  const p=routeAt(route,distance),tractorReserve=route.tractorReserve;
- if((!tractorReserve&&!insideLoaded(p.x,p.y,120))||(progress.mode!=='train'&&Math.hypot(p.x-player.x,p.y-player.y)<170)||(!initial&&nearDrivingView(p.x,p.y)))return null;
+ if((!tractorReserve&&!insideLoaded(p.x,p.y,120))||(progress.mode!=='train'&&Math.hypot(p.x-player.x,p.y-player.y)<170)||
+    (!(initial&&!started)&&inTrafficViewport(trafficViewport(TRAFFIC_SPAWN_MARGIN),p.x,p.y)))return null;
  const model=gang?'motorbike':tractorReserve?'tractor':chooseTrafficModel(roadType);
  const color=EMERGENCY_PAINT[model]??(model==='suv'?'#232727':model==='tractor'?choose(TRACTOR_PAINT):model==='bus'?choose(TRAFFIC_BUS_COLORS):choose(['#e6c36c','#ba6e59','#789c9e','#d6d6bf','#73899a','#a695a0','#8c9c73']));
  const c=makeCar(p.x,p.y,p.angle,color,'traffic',model);
@@ -2461,29 +2480,27 @@ function highwayAhead(){
  if(index===undefined)return null;
  const direction=Math.sign(heading),position=axis===1?player.x:player.y,center=axis===1?worldWindow.i:worldWindow.j;
  const end=side=>center+(side>0?worldWindow.radius+1:-worldWindow.radius);
- const viewHalf=(axis===1?viewW:viewH)/(2*zoom);
- const cameraLead=((axis===1?camera.x:camera.y)-position)*direction;
- const mapLead=(axis===1?minimapView.offsetX:minimapView.offsetY)*direction;
- const mapHalf=MINIMAP_SPAN/2*(axis===1?1:mini.height/mini.width);
+ const view=trafficViewport(TRAFFIC_SPAWN_MARGIN);
+ const [low,high]=axis===1?[view.left,view.right]:[view.top,view.bottom];
  const band=side=>{
-  const edge=roadCoord(end(side*direction),1-axis);
-  const near=Math.max(viewHalf+240+Math.max(0,cameraLead*side,side*speed*140),mapHalf+40+mapLead*side)+14;
-  return {near,far:(edge-position)*direction*side-135};
+  const sign=side*direction,edge=roadCoord(end(sign),1-axis);
+  const near=((sign>0?high:low)-position)*sign+14;
+  return {near,far:(edge-position)*sign-135};
  };
  return {axis,index,direction,position,speed,front:band(1),back:band(-1)};
 }
 function trafficSpawnFocus(){
  const scene=chunks.get(roadIndex(player.x,0)+','+roadIndex(player.y,1))?.scene;
  const highway=progress.mode==='train'?null:highwayAhead();
- const hw=viewW/(2*zoom),hh=viewH/(2*zoom),mapHalf=MINIMAP_SPAN/2,mapH=mapHalf*mini.height/mini.width;
+ const hw=viewW/(2*zoom),hh=viewH/(2*zoom),view=trafficViewport();
  const x=camera.x+clamp(player.vx*1000,-420,420),y=camera.y+clamp(player.vy*1000,-420,420);
- // Allow room for vehicles to approach the view from beyond the minimap.
- const reachX=Math.max(hw+930,mapHalf+520),reachY=Math.max(hh+930,mapH+520);
+ // Keep a supply of cars near the view for the next streets the player reaches.
+ const reachX=Math.max(x-view.left,view.right-x)+560,reachY=Math.max(y-view.top,view.bottom-y)+560;
  if(!highway)return {highway,scene:scene&&!scene.development?scene:null,x,y,reachX,reachY};
  const horizontal=highway.axis===1,cross=roadCoord(highway.index,highway.axis);
  const shoulder=roadHalf(highway.index,highway.axis);
- const across=Math.max((horizontal?hh:hw)+610,(horizontal?mapH:mapHalf)+285);
- const along=Math.max((horizontal?reachX:reachY)+265,1745);
+ const across=Math.max((horizontal?hh:hw)+450,680);
+ const along=Math.max((horizontal?reachX:reachY)+200,1180);
  return {highway,horizontal,cross,shoulder,along,x:horizontal?x:cross,y:horizontal?cross:y,
   reachX:horizontal?along:across,reachY:horizontal?across:along};
 }
@@ -2517,7 +2534,7 @@ function highwayFocusCandidate(focus,sameWay,oncoming){
    side=-side;
   }
   const {near,far}=side>0?front:back;
-  const end=Math.min(far,near+700,focus.along+(center-position)*direction*side);
+  const end=Math.min(far,near+460,focus.along+(center-position)*direction*side);
   if(end<=near)continue;
   const route=highwayRoute(axis,index,random()<.5?54:100,travel);
   const start=route.segments[0],origin=axis===1?start.x:start.y;
@@ -2610,7 +2627,7 @@ function refillReserveTractors(initial){
  for(let i=traffic.length-1;i>=0;i--){
   const c=traffic[i],key=c.tractorReserve;
   if(!key)continue;
-  if(!active.has(key)&&!protectVisibleVehicle(c)){traffic.splice(i,1);continue;}
+  if(!active.has(key)&&!protectRoadTraffic(c)){traffic.splice(i,1);continue;}
   if(!present.has(key))present.set(key,[]);
   present.get(key).push(c);
  }
@@ -2621,7 +2638,7 @@ function refillReserveTractors(initial){
   if(!route)continue;
   const lead=fleet.length?fleet[0]:null;
   const phase=lead?(lead.junctionDetour?.rejoin??projectRoute(lead))-lead.tractorSlot*route.length/count:
-   projectRoute({x:player.x,y:player.y,route,rejoinAll:true})+MINIMAP_SPAN*.57;
+   projectRoute({x:player.x,y:player.y,route,rejoinAll:true})+Math.max(viewW,viewH)/(2*zoom)+240;
   for(let slot=0;slot<count;slot++){
    if(fleet.some(c=>c.tractorSlot===slot))continue;
    const distance=phase+slot*route.length/count;
@@ -2670,12 +2687,12 @@ function districtTrafficRoute(pool,scenic,preferredScene=null){
 function focusedDistrictCandidate(source,focus,bucket,area,initial){
  const {route,roadType,cruise}=source;
  const anchor=projectRoute({x:area.x,y:area.y,route,rejoinAll:true});
- const edge=Math.min(viewW,viewH)/(2*zoom)+170;
- const step=Math.max(100,Math.min(200,route.length*.072)),jitter=random()*150;
+ const edge=Math.min(viewW,viewH)/(2*zoom)+TRAFFIC_SPAWN_MARGIN*.5;
+ const step=clamp(route.length*.06,95,175),jitter=random()*90;
  // Sample upstream points so the car drives toward the visible streets.
  for(let n=0;n<9;n++){
   const distance=anchor-edge-jitter-n*step,p=routeAt(route,distance);
-  if(nearbyStreetBucket(focus,p.x,p.y)!==bucket||!initial&&nearDrivingView(p.x,p.y,240))continue;
+  if(nearbyStreetBucket(focus,p.x,p.y)!==bucket)continue;
   const c=trafficCandidate(route,distance,roadType,cruise,initial);
   if(c)return c;
  }
@@ -2683,11 +2700,12 @@ function focusedDistrictCandidate(source,focus,bucket,area,initial){
 }
 function replaceableTraffic(focus,counts,quotas){
  let index=-1,bucket=null,best=-Infinity;
+ const view=trafficViewport(TRAFFIC_RETIRE_MARGIN);
  for(let i=0;i<traffic.length;i++){
   const car=traffic[i];
   if(car.gang||car.tractorReserve)continue;
   const group=trafficFocusBucket(focus,car);
-  if((group&&counts[group]<=quotas[group])||protectVisibleVehicle(car))continue;
+  if((group&&counts[group]<=quotas[group])||protectRoadTraffic(car,view))continue;
   const oversuppliedHighway=focus.highway&&sameTrafficHighway(highwayTrafficRoute(car),focus.highway)&&counts.highway>quotas.highway;
   const score=(car.x-focus.x)**2+(car.y-focus.y)**2+(oversuppliedHighway?12000000:0);
   if(score>best){index=i;bucket=group;best=score;}
@@ -2776,7 +2794,7 @@ const TRAFFIC_REFILL_MS=360;
 let trafficRefreshIn=TRAFFIC_REFILL_MS,tractorRefillAt=0,gangIn=FIRST_GANG_DELAY,gangSerial=0;
 function spawnMotorbikeGang(count=2+Math.floor(random()*5)){
  if(!progress.admin.npcs||!isNight()||traffic.some(c=>c.gang))return false;
- const speed=lerp(GANG_CRUISE_MIN,GANG_TOP_SPEED,random()),candidates=[];
+ const speed=lerp(GANG_CRUISE_MIN,GANG_TOP_SPEED,random()),candidates=[],view=trafficViewport(TRAFFIC_SPAWN_MARGIN);
  for(const axis of [0,1]){
   const center=axis===0?worldWindow.i:worldWindow.j;
   const along=axis===0?player.y:player.x,cross=axis===0?player.x:player.y;
@@ -2794,7 +2812,8 @@ function spawnMotorbikeGang(count=2+Math.floor(random()*5)){
      const d=(along-origin)*direction-offset;
      if(d<(count-1)*GANG_RIDER_GAP||d+300>route.length)continue;
      const front=routeAt(route,d),rear=routeAt(route,d-(count-1)*GANG_RIDER_GAP);
-     if(!insideLoaded(rear.x,rear.y,120)||!insideLoaded(front.x,front.y,120)||nearDrivingView(rear.x,rear.y,240)||nearDrivingView(front.x,front.y,240))continue;
+     if(!insideLoaded(rear.x,rear.y,120)||!insideLoaded(front.x,front.y,120)||
+        inTrafficViewport(view,rear.x,rear.y)||inTrafficViewport(view,front.x,front.y))continue;
      const approachTime=offset/Math.max(.16,speed-alongSpeed*direction);
      candidates.push({route,d,front,rear,score:lateralMiss+Math.abs(approachTime-(time||2700))*.055+offset*.035+(lane===54?24:0)});
     }
@@ -2832,10 +2851,10 @@ function maintainTraffic(dt){
  if(!progress.admin.npcs)return;
  gangIn=isNight()?Math.max(0,gangIn-dt):FIRST_GANG_DELAY;
  trafficRefreshIn-=dt;if(trafficRefreshIn>0)return;trafficRefreshIn=TRAFFIC_REFILL_MS;
- const limit=trafficLimitForTime();
+ const limit=trafficLimitForTime(),view=trafficViewport(TRAFFIC_RETIRE_MARGIN);
  for(let i=traffic.length-1;i>=0;i--){
   const c=traffic[i];
-  if(!c.tractorReserve&&(!c.gang&&traffic.length>limit||!insideLoaded(c.x,c.y,150))&&!protectVisibleVehicle(c))traffic.splice(i,1);
+  if(!c.tractorReserve&&(!c.gang&&traffic.length>limit||!insideLoaded(c.x,c.y,150))&&!protectRoadTraffic(c,view))traffic.splice(i,1);
  }
  if(!gangIn){
   if(spawnMotorbikeGang())gangIn=42000+random()*24000;
@@ -2925,7 +2944,10 @@ function streamWorld(force=false){
  staticHash.reset();for(const b of buildings)staticHash.insert(b);for(const b of obstacles)staticHash.insert(b);
  // A long route can begin several areas away while its car is still beside us.
  // Retire cars by their current position, and only safely beyond the camera.
- dynamicHash.reset();for(let n=traffic.length-1;n>=0;n--){const c=traffic[n];if(!c.tractorReserve&&!insideLoaded(c.x,c.y,150)&&!protectVisibleVehicle(c))traffic.splice(n,1);}
+ dynamicHash.reset();const trafficView=trafficViewport(TRAFFIC_RETIRE_MARGIN);
+ for(let n=traffic.length-1;n>=0;n--){
+  const c=traffic[n];if(!c.tractorReserve&&!insideLoaded(c.x,c.y,150)&&!protectRoadTraffic(c,trafficView))traffic.splice(n,1);
+ }
  buildNavigation();railRefreshWorld();refillTraffic(initial);worldWindow.generation++;worldWindow.maxLoaded=Math.max(worldWindow.maxLoaded,chunks.size);
 
  rebuildDynamic();return true;
@@ -6574,8 +6596,21 @@ const trafficJunctions={zones:[],version:-1,refresh:0,timer:0,time:0,count:0,pla
 const junctionProbe={};
 function refreshTrafficJunctions(){
  const old=new Map(trafficJunctions.zones.map(z=>[z.key,z])),zones=new Map();
- const add=(x,y,rx=65,ry=65)=>{const key=x.toFixed(1)+','+y.toFixed(1);if(zones.has(key))return;zones.set(key,{key,x,y,rx,ry,owners:old.get(key)?.owners||[],recovery:old.get(key)?.recovery||null,cars:[]});};
- for(const node of navigation.nodes){if(node.edges.length<3)continue;let rx=24,ry=24;for(const edge of node.edges){const next=navigation.nodes[edge.to],half=(edge.width||100)/2+8;if(Math.abs(next.y-node.y)>Math.abs(next.x-node.x))rx=Math.max(rx,half);else ry=Math.max(ry,half);}add(node.x,node.y,rx,ry);}
+ const add=(x,y,rx=65,ry=65,localCourtesy=false)=>{const key=x.toFixed(1)+','+y.toFixed(1);if(zones.has(key))return;zones.set(key,{key,x,y,rx,ry,localCourtesy,owners:old.get(key)?.owners||[],recovery:old.get(key)?.recovery||null,cars:[]});};
+ for(const node of navigation.nodes){
+  if(node.edges.length<3)continue;
+  let rx=24,ry=24;
+  for(const edge of node.edges){const next=navigation.nodes[edge.to],half=(edge.width||100)/2+8;if(Math.abs(next.y-node.y)>Math.abs(next.x-node.x))rx=Math.max(rx,half);else ry=Math.max(ry,half);}
+  let localCourtesy=false;
+  if(node.edges.every(edge=>edge.kind==='street')){
+   const i=roadIndex(node.x,0),j=roadIndex(node.y,1);
+   if(!isHighway(i)&&!isHighway(j)){
+    const type=regionType(Math.floor(i/3),Math.floor(j/3));
+    localCourtesy=type==='residential'||type==='commercial';
+   }
+  }
+  add(node.x,node.y,rx,ry,localCourtesy);
+ }
  for(const c of traffic)for(const p of c.route.junctions||[])add(p.x,p.y);
  trafficJunctions.zones=[...zones.values()];trafficJunctions.version=navigation.version;trafficJunctions.count=traffic.length;trafficJunctions.refresh=1200;
 }
@@ -6591,7 +6626,7 @@ function junctionSegments(plan){
   const s=segments[i-1]||(segments[i-1]={});
   s.a=a;s.b=b;s.dx=dx;s.dy=dy;s.len=len;s.len2=dx*dx+dy*dy||1;
   s.left=Math.min(a.x,b.x);s.right=Math.max(a.x,b.x);s.top=Math.min(a.y,b.y);s.bottom=Math.max(a.y,b.y);
-  s.from=distance;s.start=distance/pace-pad;distance+=len;s.end=distance/pace+pad;
+  s.sweep=null;s.from=distance;s.start=distance/pace-pad;distance+=len;s.end=distance/pace+pad;
   left=Math.min(left,s.left);right=Math.max(right,s.right);top=Math.min(top,s.top);bottom=Math.max(bottom,s.bottom);
   if(!len){straight=false;continue;}
   if(i===1){fx=dx/len;fy=dy/len;}
@@ -6604,6 +6639,10 @@ function junctionSegments(plan){
 function junctionPointDistance(p,s){
  const x=p.x-s.a.x,y=p.y-s.a.y,t=clamp((x*s.dx+y*s.dy)/s.len2,0,1);
  return (x-s.dx*t)**2+(y-s.dy*t)**2;
+}
+function localJunctionClearance(a,b){
+ return a.zone.localCourtesy&&!a.detour&&!b.detour&&
+  (a.turning||b.turning||Math.abs(Math.cos(a.car.angle-b.car.angle))<.5);
 }
 function trafficPathsConflict(a,b,timed=false){
  const as=junctionSegments(a),bs=junctionSegments(b),radius=a.car.hh+b.car.hh+(timed?4:9),r2=radius*radius;
@@ -6622,6 +6661,23 @@ function trafficPathsConflict(a,b,timed=false){
   if(Math.min(junctionPointDistance(p.a,q),junctionPointDistance(p.b,q),junctionPointDistance(q.a,p),junctionPointDistance(q.b,p))<r2)return [p.from,q.from];
  }
  return null;
+}
+function junctionClearanceConflict(a,b){
+ const as=junctionSegments(a),bs=junctionSegments(b),margin=2;
+ const reach=Math.hypot(a.car.hw+margin,a.car.hh+margin)+Math.hypot(b.car.hw+margin,b.car.hh+margin);
+ if(a.right+reach<b.left||a.left-reach>b.right||a.bottom+reach<b.top||a.top-reach>b.bottom)return null;
+ let da=Infinity,db=Infinity;
+ // Reserve room for the full vehicle bodies. Following distance
+ // between cars travelling in the same direction belongs to the sensor.
+ for(const p of as)for(const q of bs){
+  if(p.right+reach<q.left||p.left-reach>q.right||p.bottom+reach<q.top||p.top-reach>q.bottom)continue;
+  if(p.dx*q.dx+p.dy*q.dy>.94*p.len*q.len)continue;
+  const ap=p.sweep||(p.sweep=junctionSweep(a.car,p.a,p.b,margin));
+  const bp=q.sweep||(q.sweep=junctionSweep(b.car,q.a,q.b,margin));
+  if(!contact(ap,bp))continue;
+  da=Math.min(da,p.from);db=Math.min(db,q.from);
+ }
+ return da<Infinity?[da,db]:null;
 }
 function junctionExitClear(c,z,exit,skip){
  if(!exit)return true;
@@ -6840,27 +6896,60 @@ function playerDetourSpeed(car,d,speed,brake){
  return PLAYER_BYPASS_SPEED;
 }
 function resolveJunctionStall(z,time){
- const pair=z.recovery;
- if(pair&&time<pair.until&&z.cars.some(p=>p.car===pair.clearing&&p.inside)&&
-    z.cars.some(p=>p.car===pair.yielding))return pair;
+ const recovery=z.recovery;
+ if(recovery&&time<recovery.until&&z.cars.some(p=>p.car===recovery.clearing&&p.inside)&&
+    z.cars.some(p=>p.car===recovery.yielding))return recovery;
  z.recovery=null;
- for(const {car,inside} of z.cars){
-  const other=car.blocker;
-  if(!inside||(car.stuckFor||0)<1000||car.reverseFor>0||car.playerBackup||onTrafficHighway(car)||
-     other?.kind!=='traffic'||other.blocker!==car||(other.stuckFor||0)<1000||
-     !other.junctionInside||other.junctionZone!==z||other.reverseFor>0||other.playerBackup||onTrafficHighway(other))continue;
-  // The shorter vehicle usually has more room to back out of the turn.
-  const short=car.hw<=other.hw?car:other,long=short===car?other:car;
-  const yielding=trafficRearLimit(short)>.025||trafficRearLimit(long)<=.025?short:long;
-  const clearing=yielding===car?other:car;
-  yielding.reverseFor=1450;yielding.cooldown=0;yielding.rejoinAll=true;yielding.stuckFor=0;
-  return z.recovery={yielding,clearing,until:time+4250};
+ if(z.cars.length<2)return null;
+ const stopped=new Set(z.cars.filter(({car,inside})=>inside&&car.stuckFor>=1000&&
+  Math.hypot(car.vx,car.vy)<.025&&!car.reverseFor&&!car.playerBackup&&!onTrafficHighway(car)&&
+  !(car.trafficLimit<.04&&car.blocker&&car.blocker.kind!=='traffic')).map(p=>p.car));
+ if(stopped.size<2)return null;
+ const handled=new Set(),chain=[];
+ const findCycle=car=>{
+  if(!stopped.has(car)||handled.has(car))return null;
+  const seen=chain.indexOf(car);
+  if(seen>=0)return chain.slice(seen);
+  chain.push(car);
+  const cycle=(car.trafficLimit<.04&&findCycle(car.blocker))||findCycle(car.junctionBlocker);
+  chain.pop();
+  if(!cycle)handled.add(car);
+  return cycle;
+ };
+ for(const car of stopped){
+  const cycle=findCycle(car);
+  if(!cycle)continue;
+  let yielding=null,rearRoom=.018;
+  // Only reverse a car that has room. Prefer the shorter vehicle when the
+  // available space is comparable, so large vehicles can finish their turns.
+  for(const member of cycle){
+   const rear=trafficRearLimit(member);
+   if(rear>rearRoom+.006||rear>rearRoom&&(!yielding||member.hw<yielding.hw)){
+    yielding=member;rearRoom=rear;
+   }
+  }
+  if(!yielding){for(const member of cycle)handled.add(member);continue;}
+  const clearing=cycle[mod(cycle.indexOf(yielding)-1,cycle.length)];
+  yielding.reverseFor=1750;yielding.cooldown=0;yielding.rejoinAll=true;yielding.stuckFor=0;
+  return z.recovery={yielding,clearing,until:time+4500};
  }
  return null;
 }
+function localPlayerCrossing(z,stoppedFor,playerSpeed){
+ // Look a short distance ahead of the player and keep the crossing protected
+ // until the rear of the car has cleared it.
+ const reach=Math.min(110,player.hw+playerSpeed*420);
+ if(!z.localCourtesy||!junctionContains(z,player,reach+player.hw))return null;
+ const crossing={x:z.x,y:z.y,hw:z.rx,hh:z.ry,angle:0};
+ if(contact(crossing,player))return stoppedFor<PLAYER_JUNCTION_DETOUR_DELAY?crossing:null;
+ if(stoppedFor||!playerSpeed)return null;
+ const px=player.x+player.vx/playerSpeed*reach,py=player.y+player.vy/playerSpeed*reach;
+ return boxOnSegment(z.x-z.rx,z.y-z.ry,z.x+z.rx,z.y+z.ry,player.x,player.y,px,py)?crossing:null;
+}
 function updateTrafficJunctions(dt){
  const state=trafficJunctions;
- const playerStopped=started&&progress.mode!=='train'&&Math.hypot(player.vx,player.vy)<.018;
+ const playerSpeed=Math.hypot(player.vx,player.vy);
+ const playerStopped=started&&progress.mode!=='train'&&playerSpeed<.018;
  state.playerStillFor=playerStopped?(state.playerStillFor||0)+dt:0;
  state.time+=dt;state.refresh-=dt;state.timer-=dt;
  const refresh=state.version!==navigation.version||state.refresh<=0||state.count!==traffic.length;
@@ -6881,7 +6970,7 @@ function updateTrafficJunctions(dt){
   }
   const z=chosen?.zone||null,key=z?.key||null;
   if(c.junctionKey!==key){
-   c.junctionKey=key;
+   c.junctionKey=key;c.junctionBlocker=null;
    if(nightSpeeder(c))c.senseIn=0;
    if(chosen)c.junctionArrival=state.time+chosen.entry/Math.max(.08,Math.hypot(c.vx,c.vy));
   }
@@ -6890,6 +6979,10 @@ function updateTrafficJunctions(dt){
   c.junctionEntry=chosen.entry;c.junctionInside=chosen.inside;
   const entryPoint=routeAt(c.route,d+chosen.entry);
   chosen.path.push(chosen.inside?{...entryPoint,x:c.x,y:c.y}:entryPoint);
+  if(z.localCourtesy&&chosen.inside&&c.hw>25&&Math.abs(angleDiff(c.angle,entryPoint.angle))>.22){
+   chosen.turning=true;
+   chosen.turningNow=junctionContains(z,c);
+  }
   for(let n=chosen.entry+16;n<chosen.entry+(z.rx+z.ry)*2+pad*2+100;n+=16){
    const point=routeAt(c.route,d+n);chosen.path.push(point);chosen.exitDistance=n;
    if(Math.abs(angleDiff(point.angle,entryPoint.angle))>.28){
@@ -6900,10 +6993,12 @@ function updateTrafficJunctions(dt){
   }
   z.cars.push(chosen);
  }
+ const playerOnRoad=started&&progress.mode!=='train'&&!powerActive('phase');
  for(const z of state.zones){
   const group=z.cars;if(!group.length){z.owners=[];z.recovery=null;continue;}
   const recovery=resolveJunctionStall(z,state.time);
-  const playerPresent=started&&progress.mode!=='train'&&!powerActive('phase')&&junctionContains(z,player,player.hw+8);
+  const playerPresent=playerOnRoad&&junctionContains(z,player,player.hw+8);
+  const courtesy=playerOnRoad?localPlayerCrossing(z,state.playerStillFor,playerSpeed):null;
   const parkedPlayer=playerPresent&&playerStopped?{x:player.x,y:player.y,angle:player.angle}:null;
   for(const p of group){
    const car=p.car,fast=fastTraffic(car);
@@ -6911,6 +7006,11 @@ function updateTrafficJunctions(dt){
    // The traffic sensor handles following distance on the through lanes.
    p.mayEnter=fast||!p.turning||junctionExitClear(car,z,p.exit,playerPresent?player:null);
    if(car.playerBackup){p.mayEnter=false;continue;}
+   if(courtesy&&car!==recovery?.clearing&&!car.reverseFor&&!onTrafficHighway(car)&&
+      !Object.hasOwn(EMERGENCY_PAINT,car.model)&&!ignoresCollision(car,player)&&
+      !contact(courtesy,car)&&p.path.some(point=>junctionContains(z,point))){
+    p.mayEnter=false;
+   }
    if(nightSpeeder(car)||!playerPresent||ignoresCollision(car,player))continue;
    const approach=junctionApproach(p),hits=junctionPlayerHits(car,approach);
    car.playerOnJunctionPath=hits.length>0;
@@ -6939,6 +7039,14 @@ function updateTrafficJunctions(dt){
   }
   const priority=p=>fastTraffic(p.car)?0:p.turning?2:1;
   const granted=group.filter(p=>p.car===recovery?.clearing);
+  const competingRoutes=z.localCourtesy&&group.some(p=>localJunctionClearance(group[0],p));
+  // Let the lead vehicle claim its turn before queued cars reserve a path.
+  if(competingRoutes)for(const p of group){
+   if(!junctionContains(z,p.car)&&trafficQueuedBehind(p,group)){
+    p.mayEnter=false;
+    p.yieldRoom=Math.max(0,p.entry-16);
+   }
+  }
   const order=group.filter(p=>p.car!==recovery?.yielding&&p.car!==recovery?.clearing&&(p.mayEnter||junctionContains(z,p.car)));
   for(const p of [...granted,...order]){
    p.crossings=new Map();p.stoppingRoom=Infinity;
@@ -6948,10 +7056,12 @@ function updateTrafficJunctions(dt){
   // A car already at the point where paths cross gets to clear it first.
   const checkCrossing=(a,b)=>{
    if(sameMotorbikeGang(a.car,b.car))return;
-   const overlap=trafficPathsConflict(a,b,true);
+   const useClearance=localJunctionClearance(a,b),overlap=useClearance?junctionClearanceConflict(a,b):trafficPathsConflict(a,b,true);
    if(!overlap)return;
-   const aRoom=overlap[0]-a.car.hw-18,bRoom=overlap[1]-b.car.hw-18;
-   a.crossings.set(b,aRoom);b.crossings.set(a,bRoom);
+   const aRoom=overlap[0]-18-(useClearance?0:a.car.hw),bRoom=overlap[1]-18-(useClearance?0:b.car.hw);
+   // Keep approaching vehicles far enough back for the passing vehicle's overhang.
+   a.crossings.set(b,useClearance?Math.min(aRoom,a.entry):aRoom);
+   b.crossings.set(a,useClearance?Math.min(bRoom,b.entry):bRoom);
    a.stoppingRoom=Math.min(a.stoppingRoom,aRoom-a.stoppingDistance);
    b.stoppingRoom=Math.min(b.stoppingRoom,bRoom-b.stoppingDistance);
   };
@@ -6959,17 +7069,24 @@ function updateTrafficJunctions(dt){
    for(const clearing of granted)checkCrossing(p,clearing);
    for(let j=i+1;j<order.length;j++)checkCrossing(p,order[j]);
   }
-  order.sort((a,b)=>Math.min(0,a.stoppingRoom)-Math.min(0,b.stoppingRoom)||
+  for(const p of order)p.committed=competingRoutes&&z.owners.includes(p.car)&&junctionContains(z,p.car);
+  order.sort((a,b)=>Number(b.committed)-Number(a.committed)||
+   Math.min(0,a.stoppingRoom)-Math.min(0,b.stoppingRoom)||
    Number(!!b.turningNow)-Number(!!a.turningNow)||priority(a)-priority(b)||
    (a.car.junctionArrival-b.car.junctionArrival)||(a.car.id-b.car.id));
   for(const candidate of order){
    let room=Infinity;
-   if(!nightSpeeder(candidate.car))for(const passing of granted)room=Math.min(room,candidate.crossings.get(passing)??Infinity);
+   if(!nightSpeeder(candidate.car))for(const passing of granted){
+    const gap=candidate.crossings.get(passing)??Infinity;
+    if(gap<room){room=gap;candidate.yieldingTo=passing.car;}
+   }
    if(room===Infinity)granted.push(candidate);
    else candidate.yieldRoom=room;
   }
   z.owners=granted.map(p=>p.car);
   for(const p of group){
+   // Carry the actual reservation dependency into the next recovery scan.
+   p.car.junctionBlocker=null;
    if(z.owners.includes(p.car)){
     if(p.detour)usePlayerDetour(p.car,p.detour,parkedPlayer);
     continue;
@@ -6977,6 +7094,7 @@ function updateTrafficJunctions(dt){
    const fast=fastTraffic(p.car),buffer=fast?26+Math.hypot(p.car.vx,p.car.vy)*65:18;
    const room=p.yieldRoom??p.entry-buffer;
    p.car.junctionWait=true;p.car.junctionLimit=Math.sqrt(2*(fast?FAST_TRAFFIC_BRAKE:.00055)*Math.max(0,room));
+   if(p.car.junctionLimit<.04)p.car.junctionBlocker=p.yieldingTo;
   }
  }
 }
@@ -7022,7 +7140,20 @@ function senseTraffic(c,speed){
   if(inLane&&sharesJunction&&!c.reverseFor&&!other.reverseFor){
    // A temporary steering angle can point into a lane the route never enters.
    const approach=zone.cars.find(p=>p.car===c),otherApproach=zone.cars.find(p=>p.car===other);
-   if(approach&&otherApproach&&!trafficPathsConflict(approach,otherApproach)){
+   if(approach&&otherApproach&&localJunctionClearance(approach,otherApproach)){
+    // Check the body in front of this car against the intended lane.
+    // On a turn the steering angle temporarily points across adjacent lanes.
+    const nose={x:c.x+fx*8,y:c.y+fy*8};
+    inLane=!!contact(junctionSweep(c,c,nose,2),other);
+    if(!inLane){
+     let from=routeAt(c.route,approach.d);
+     for(let offset=16;offset<=Math.min(range,ahead+c.hw+length+16);offset+=16){
+      const to=routeAt(c.route,approach.d+offset);
+      if(contact(junctionSweep(c,from,to,2),other)){inLane=true;break;}
+      from=to;
+     }
+    }
+   }else if(approach&&otherApproach&&!trafficPathsConflict(approach,otherApproach)){
     const nose={x:c.x+fx*6,y:c.y+fy*6};
     inLane=!!contact(junctionSweep(c,c,nose,1),other);
    }
