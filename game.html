@@ -187,6 +187,7 @@ body[data-input="gamepad"] .modal :is(button,select,#atlas):focus{outline:2px so
    <button type="button" role="switch" data-admin-toggle="speed" aria-checked="false">Superspeed<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="nitro" aria-checked="false">Infinite nitro<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="phase" aria-checked="false">Ghost mode<span aria-hidden="true"></span></button>
+   <button type="button" role="switch" data-admin-toggle="music" aria-checked="true">Music<span aria-hidden="true"></span></button>
   </div>
  </section>
 </div>
@@ -4628,7 +4629,7 @@ function cleanGarage(raw,kind,legacy=false){
 function cleanAdminSettings(raw){
  return {
   time:raw?.time==='day'||raw?.time==='night'?raw.time:'cycle',
-  npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true
+  npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,music:raw?.music!==false
  };
 }
 function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,position:null,railPosition:null,garages:{train:freshGarage('train'),car:freshGarage('car'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
@@ -5983,7 +5984,46 @@ function drawRouteDestination(){
 
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2800);}
 function clearKeys(){resetGamepadDrive();turbo.active=false;for(const k of Object.keys(keys))delete keys[k];document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));}
-function start(){if(started)return;started=true;$('intro').hidden=true;document.body.classList.add('driving');canvas.focus({preventScroll:true});if(progress.policeEnabled&&progress.admin.npcs){deployPolice();toast('Police pursuit on. Keep moving.');}else if(JOB_MODES.includes(progress.mode))toast(GAME_MODES[progress.mode].name+(jobTarget()?' · Your accepted job is ready to resume.':' · '+inputHint('Press E to accept a job.','Press {confirm} to accept a job.'))); else toast('Welcome to '+neighbourhood(player.x,player.y)+'. Take any turn.');ensureJobOffer();updateHUD();updatePoliceHUD();}
+const MUSIC_TRACKS={day:['Day_1.m4a','Day_2.m4a'],night:['Night.m4a']};
+let musicAudio=null,musicPhase=null,musicTrackSelected=false,musicAutoplayBlocked=false;
+function syncMusic(){
+ if(!started)return;
+ const phase=dayPhase(),tracks=MUSIC_TRACKS[phase];
+ if(phase!==musicPhase){
+  musicPhase=phase;
+  // A new day or night gets one track. Twilight lets the existing track finish.
+  if(tracks){
+   musicAudio?.pause();
+   musicTrackSelected=false;
+   musicAutoplayBlocked=false;
+  }
+ }
+ if(!progress.admin.music||activeModal||document.hidden){
+  musicAudio?.pause();
+  return;
+ }
+ const selectTrack=tracks&&!musicTrackSelected;
+ if(selectTrack){
+  if(!musicAudio){musicAudio=new Audio();musicAudio.volume=.45;}
+  musicAudio.src=tracks.length===1?tracks[0]:tracks[Math.floor(Math.random()*tracks.length)];
+  musicTrackSelected=true;
+ }
+ if(!musicTrackSelected||musicAutoplayBlocked||
+    !selectTrack&&(!musicAudio.paused||musicAudio.ended||!tracks&&musicAudio.currentTime===0))return;
+ const source=musicAudio.src;
+ musicAudio.play().catch(error=>{
+  if(error.name==='NotAllowedError'&&musicPhase===phase&&musicAudio.src===source)musicAutoplayBlocked=true;
+ });
+}
+function retryMusic(){
+ if(!musicAutoplayBlocked)return;
+ musicAutoplayBlocked=false;
+ syncMusic();
+}
+document.addEventListener('click',retryMusic);
+document.addEventListener('keydown',retryMusic);
+document.addEventListener('pointerup',retryMusic);
+function start(){if(started)return;started=true;syncMusic();$('intro').hidden=true;document.body.classList.add('driving');canvas.focus({preventScroll:true});if(progress.policeEnabled&&progress.admin.npcs){deployPolice();toast('Police pursuit on. Keep moving.');}else if(JOB_MODES.includes(progress.mode))toast(GAME_MODES[progress.mode].name+(jobTarget()?' · Your accepted job is ready to resume.':' · '+inputHint('Press E to accept a job.','Press {confirm} to accept a job.'))); else toast('Welcome to '+neighbourhood(player.x,player.y)+'. Take any turn.');ensureJobOffer();updateHUD();updatePoliceHUD();}
 function renderAdminPanel(){
  const settings=progress.admin;
  for(const button of $('adminModal').querySelectorAll('[data-admin-time]'))button.setAttribute('aria-pressed',String(settings.time===button.dataset.adminTime));
@@ -6028,12 +6068,12 @@ $('adminModal').addEventListener('click',event=>{
    }
   }
  }
- renderAdminPanel();saveProgress();updateHUD();draw();drawMini();
+ renderAdminPanel();syncMusic();saveProgress();updateHUD();draw();drawMini();
 });
 function closeModal(){
  if(!activeModal)return;
  if(activeModal==='trophyModal')dismissTrophyConfirmation();
- $(activeModal).hidden=true;activeModal=null;clearKeys();updateGamepadMenuHint();
+ $(activeModal).hidden=true;activeModal=null;syncMusic();clearKeys();updateGamepadMenuHint();
  $('pauseBtn').textContent='Ⅱ';$('pauseBtn').setAttribute('aria-label','Pause game');
  if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});else canvas.focus({preventScroll:true});
  last=performance.now();accumulator=0;
@@ -6042,7 +6082,7 @@ function openModal(id){
  if(activeModal===id){closeModal();return;}
  if(activeModal==='trophyModal')dismissTrophyConfirmation();
  if(activeModal)$(activeModal).hidden=true;else previousFocus=document.activeElement;
- activeModal=id;$(id).hidden=false;$('toast').classList.remove('show');clearKeys();
+ activeModal=id;syncMusic();$(id).hidden=false;$('toast').classList.remove('show');clearKeys();
  $('pauseBtn').textContent='▶';$('pauseBtn').setAttribute('aria-label','Resume game');
  if(id==='mapModal'){mapView.x=player.x;mapView.y=player.y;drawAtlas();}
  if(id==='garageModal'){previewSelection=null;saveProgress();renderGarage();}
@@ -6124,7 +6164,7 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>delete keys[e.key.toLowerCase()]);
 addEventListener('pagehide',()=>{if(progressDirty)saveProgress();});
 addEventListener('blur',()=>{gamepad.suspended=true;if(progressDirty)saveProgress();clearKeys();if(started&&!activeModal)openModal('pauseModal');});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){gamepad.suspended=true;if(progressDirty)saveProgress();clearKeys();if(started&&!activeModal)openModal('pauseModal');}last=performance.now();accumulator=0;});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){gamepad.suspended=true;if(progressDirty)saveProgress();clearKeys();if(started&&!activeModal)openModal('pauseModal');}syncMusic();last=performance.now();accumulator=0;});
 document.querySelectorAll('[data-key]').forEach(button=>{
  button.addEventListener('pointerdown',e=>{e.preventDefault();if(activeModal)return;if(!started)start();button.setPointerCapture(e.pointerId);keys[button.dataset.key]=true;if(['a','d'].includes(button.dataset.key))railSetManualTurn(button.dataset.key==='a'?-1:1);button.classList.add('held');});
  for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,()=>{delete keys[button.dataset.key];button.classList.remove('held');});
@@ -7363,9 +7403,13 @@ function refreshTrafficForDayPhase(){
 }
 function physics(dt){
  if(started&&progress.admin.time==='cycle'){
-  const wasNight=isNight();
+  const previousPhase=dayPhase();
   dayCycleMs=(dayCycleMs+dt)%DAY_CYCLE_MS;
-  if(wasNight!==isNight())refreshTrafficForDayPhase();
+  const phase=dayPhase();
+  if(phase!==previousPhase){
+   if((previousPhase==='night')!==(phase==='night'))refreshTrafficForDayPhase();
+   syncMusic();
+  }
  }
  streamWorld();maintainTraffic(dt);if(started){tickPowers(dt);maintainPursuit(dt);}
  physicsTick++;activeBodies.length=0;
