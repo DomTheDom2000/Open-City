@@ -12,6 +12,7 @@
 .top{position:fixed;top:28px;left:32px;right:32px;display:flex;align-items:center;justify-content:space-between;gap:20px;pointer-events:none}.brand{display:flex;align-items:center;gap:13px;text-shadow:0 2px 12px #102b2baa}.brand-icon{background:var(--green);color:#193732;width:43px;height:43px;display:grid;place-items:center;font-size:29px;font-weight:bold;border-radius:12px;box-shadow:0 4px 16px #1233}.brand-name{font-size:21px;letter-spacing:-1px;font-weight:900;line-height:1}.brand-sub{display:block;font-size:9px;letter-spacing:2.1px;margin-top:7px;font-weight:500;color:#f5f2e6}.top-right{display:flex;gap:8px;pointer-events:auto}.pill,.iconbtn{border:1px solid var(--line);background:var(--panel);color:var(--ink);box-shadow:0 5px 20px #15272719;backdrop-filter:blur(16px)}.pill{border-radius:30px;padding:12px 17px;display:flex;align-items:center;gap:9px;font-size:10px;letter-spacing:1.4px;font-weight:700}.live-dot{width:6px;height:6px;background:var(--green);border-radius:100%;box-shadow:0 0 10px #def3a133}.iconbtn{border-radius:50%;width:39px;height:39px;display:grid;place-items:center;font-size:16px;transition:background .15s}.iconbtn:hover{background:#36524b}.iconbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}
 .location{position:fixed;top:103px;left:33px;pointer-events:none;text-shadow:0 2px 7px #102726}.eyebrow{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted)}.location strong{display:block;font-size:16px;margin-top:5px;letter-spacing:-.3px}.location small{display:block;font-size:10px;margin-top:5px;color:#e1e6db}
 .location .day-cycle{color:#f6e0a3;font-weight:700;font-variant-numeric:tabular-nums}.location .day-cycle[data-phase="night"]{color:#cbddf6}
+.location .day-cycle[data-phase="sunset"]{color:#f4c6e7}.location .day-cycle[data-phase="sunrise"]{color:#dcccf8}
 .map-card{position:fixed;left:30px;bottom:29px;width:230px;border:1px solid #c6d4b83a;border-radius:17px;background:var(--panel);padding:9px;box-shadow:0 12px 35px #102d2b33;backdrop-filter:blur(15px)}.map-button{display:block;width:100%;border:0;background:none;padding:0;position:relative;border-radius:10px;overflow:hidden;color:var(--ink)}#mini{display:block;width:210px;height:174px;background:#284a44}.north{position:absolute;right:9px;top:8px;font-size:9px;font-weight:700;background:#163b35c9;padding:4px 5px;border-radius:4px}.map-label{display:flex;align-items:center;justify-content:space-between;font-size:9px;letter-spacing:1.3px;padding:11px 5px 3px;color:#dfe5d9}.map-label span:last-child{color:var(--green)}
 .drive-hud{position:fixed;bottom:30px;right:32px;width:202px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:19px 21px 16px;backdrop-filter:blur(16px);box-shadow:0 8px 30px #102d2b22}.car-title{display:flex;align-items:center;justify-content:space-between;font-size:9px;letter-spacing:1.2px;color:var(--muted)}.car-title span:last-child{color:var(--green)}.speed-line{display:flex;align-items:baseline;gap:9px;margin:4px 0 7px}.speed{font-size:62px;line-height:1.1;font-weight:700;letter-spacing:-4px;font-variant-numeric:tabular-nums}.unit{font-size:9px;letter-spacing:1px;color:var(--muted)}.gear{margin-left:auto;font-size:20px;color:var(--green)}.speed-track{height:3px;background:#ffffff1a;margin-bottom:15px;border-radius:3px;overflow:hidden}.speed-fill{height:100%;width:0;background:var(--green);transition:width .1s}.distance{display:flex;justify-content:space-between;align-items:baseline;font-size:9px;letter-spacing:1px;color:var(--muted)}.distance b{color:var(--ink);font-size:12px;letter-spacing:.2px;font-variant-numeric:tabular-nums}
 .intro{position:fixed;top:50%;right:7%;transform:translateY(-48%);width:344px;padding:31px;border-radius:23px;border:1px solid #d6dfb431;background:#142f2bf2;backdrop-filter:blur(20px);box-shadow:0 25px 80px #112d2b45}.intro .eyebrow{color:var(--green)}.intro h1{font-size:49px;line-height:.98;letter-spacing:-2.5px;margin:23px 0 18px;font-weight:800}.intro h1 em{font-style:normal;color:var(--green)}.intro p{font-size:12px;line-height:1.8;color:#c2cec0;margin:0 0 25px;max-width:260px}.start{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:var(--green);color:#1a362d;font-weight:700;font-size:12px;border-radius:10px;padding:16px 18px}.start:hover{background:#e1f7a5}.start span{font-size:20px;font-weight:400}.intro-footer{font-size:9px;letter-spacing:1.3px;color:#9eafa2;margin-top:18px;display:flex;align-items:center;justify-content:space-between}.intro-footer i{font-style:normal;color:var(--green)}
@@ -249,17 +250,33 @@ const $=id=>document.getElementById(id),canvas=$('game');
 let ctx=canvas.getContext('2d',{alpha:false});
 const mini=$('mini'),mctx=mini.getContext('2d'), atlas=$('atlas'),actx=atlas.getContext('2d');
 const TAU=Math.PI*2,STEP=1000/120,SPACING=500,HALF=65,LANE=22,WORLD_SEED=4271;
-const DAY_PHASE_MS=180000,TWILIGHT_MS=10000,DAY_TRAFFIC_LIMIT=48,NIGHT_TRAFFIC_LIMIT=24;
+const DAY_MS=180000,NIGHT_MS=180000,TWILIGHT_MS=30000;
+const DAY_CYCLE_MS=DAY_MS+NIGHT_MS+TWILIGHT_MS*2;
+const DAY_PHASES={
+ day:{label:'Day',end:DAY_MS},
+ sunset:{label:'Sunset',end:DAY_MS+TWILIGHT_MS},
+ night:{label:'Night',end:DAY_CYCLE_MS-TWILIGHT_MS},
+ sunrise:{label:'Sunrise',end:DAY_CYCLE_MS}
+};
+const DAY_TRAFFIC_LIMIT=48,NIGHT_TRAFFIC_LIMIT=24;
 let dayCycleMs=0;
 const MINIMAP_SPAN=1900,MINIMAP_LOOK_AHEAD=480,MINIMAP_CACHE_PAD=64;
 const minimapView={offsetX:0,offsetY:0,terrain:document.createElement('canvas'),cachedRegion:null};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
-function isNight(){return progress.admin.time==='night'||progress.admin.time==='cycle'&&dayCycleMs>=DAY_PHASE_MS;}
-function nightLevel(){
- if(progress.admin.time!=='cycle')return progress.admin.time==='night'?1:0;
- const elapsed=dayCycleMs-DAY_PHASE_MS;
- const t=clamp(Math.min(elapsed,DAY_PHASE_MS-elapsed)/TWILIGHT_MS,0,1);
+function dayPhase(){
+ const setting=progress.admin.time;
+ if(setting!=='cycle')return setting;
+ if(dayCycleMs<DAY_PHASES.day.end)return 'day';
+ if(dayCycleMs<DAY_PHASES.sunset.end)return 'sunset';
+ if(dayCycleMs<DAY_PHASES.night.end)return 'night';
+ return 'sunrise';
+}
+function isNight(){return dayPhase()==='night';}
+function nightLevel(phase=dayPhase()){
+ if(phase==='day'||phase==='night')return phase==='night'?1:0;
+ const elapsed=phase==='sunset'?dayCycleMs-DAY_PHASES.day.end:DAY_CYCLE_MS-dayCycleMs;
+ const t=clamp(elapsed/TWILIGHT_MS,0,1);
  return t*t*(3-2*t);
 }
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
@@ -7347,7 +7364,7 @@ function refreshTrafficForDayPhase(){
 function physics(dt){
  if(started&&progress.admin.time==='cycle'){
   const wasNight=isNight();
-  dayCycleMs=(dayCycleMs+dt)%(DAY_PHASE_MS*2);
+  dayCycleMs=(dayCycleMs+dt)%DAY_CYCLE_MS;
   if(wasNight!==isNight())refreshTrafficForDayPhase();
  }
  streamWorld();maintainTraffic(dt);if(started){tickPowers(dt);maintainPursuit(dt);}
@@ -9042,6 +9059,18 @@ function drawVehicleLights(c,beam){
  }
  ctx.restore();
 }
+function drawTwilightGlow(phase,night){
+ const strength=night*(1-night)*.92;
+ if(!strength)return;
+ const sunset=phase==='sunset';
+ ctx.save();ctx.setTransform(1,0,0,1,0,0);
+ const glow=ctx.createLinearGradient(0,0,0,canvas.height);
+ glow.addColorStop(0,sunset?'#d8a0ef':'#e6b7ef');
+ glow.addColorStop(1,sunset?'#77488b':'#8376ba');
+ ctx.globalAlpha=strength;ctx.fillStyle=glow;
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+ ctx.restore();
+}
 function drawNightLighting(level){
  if(!nightLightTextures)nightLightTextures=createNightLightTextures();
  const {beam}=nightLightTextures;
@@ -9460,7 +9489,7 @@ function drawSceneryRoofTile(tile){
  finally{ctx=screen;}
  return canvas;
 }
-function shouldPrepareNightTiles(){return progress.admin.time==='night'||progress.admin.time==='cycle'&&dayCycleMs>=DAY_PHASE_MS-1800;}
+function shouldPrepareNightTiles(){return progress.admin.time==='night'||progress.admin.time==='cycle'&&dayCycleMs>=DAY_PHASES.day.end-1800;}
 function prepareSceneryTile(tile,night){
  if(tile.roof===undefined){tile.roof=drawSceneryRoofTile(tile);return;}
  if(night&&tile.night===undefined)tile.night=drawSceneryNightTile(tile);
@@ -9667,7 +9696,7 @@ function draw(){
  canvas.style.transform='translate3d('+((exactX-x)/pixelRatio)+'px,'+((exactY-y)/pixelRatio)+'px,0)';
  ctx.setTransform(scale,0,0,scale,x,y);
  bounds={l:camera.x-viewW/(2*zoom)-45,r:camera.x+viewW/(2*zoom)+45,t:camera.y-viewH/(2*zoom)-45,b:camera.y+viewH/(2*zoom)+45};
- const night=nightLevel();
+ const phase=dayPhase(),night=nightLevel(phase);
  prepareScenery();paintScenery(sceneryCache.ground);
  for(const s of skids)if(visible(s.x,s.y,6)){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.angle);ctx.globalAlpha=Math.min(.4,s.life/11000*.5);rect(-3,-1,6,2,'#182d28');ctx.restore();}
  if(!night)drawRoadTurnGuidance();
@@ -9691,6 +9720,7 @@ function draw(){
  }
  drawExplosions();
  railDrawUpperLayer(night);
+ drawTwilightGlow(phase,night);
  // A small floating chevron keeps your car easy to find without covering it.
  if(!started||simTime<6500){const bob=Math.sin(performance.now()/230)*2;ctx.save();ctx.translate(renderedPlayer.x,renderedPlayer.y-24+bob);ctx.beginPath();ctx.moveTo(-5,-5);ctx.lineTo(0,0);ctx.lineTo(5,-5);ctx.strokeStyle='#edfac1';ctx.lineWidth=2;ctx.stroke();ctx.restore();}
  ctx.setTransform(1,0,0,1,0,0);
@@ -10013,9 +10043,13 @@ function updateHUD(){
  updateWaypointArrival();
  updateModeHUD();
  updatePowerHUD();
- const night=isNight(),timeLeft=Math.ceil((DAY_PHASE_MS-dayCycleMs%DAY_PHASE_MS)/1000),clock=$('dayCycle');
- const clockText=progress.admin.time==='cycle'?(night?'Night':'Day')+' · '+Math.floor(timeLeft/60)+':'+String(timeLeft%60).padStart(2,'0'):night?'Always night':'Always day';
- clock.hidden=!started;if(clock.textContent!==clockText){clock.textContent=clockText;clock.dataset.phase=night?'night':'day';}
+ const phase=dayPhase(),clock=$('dayCycle');
+ let clockText='Always '+phase;
+ if(progress.admin.time==='cycle'){
+  const {label,end}=DAY_PHASES[phase],timeLeft=Math.ceil((end-dayCycleMs)/1000);
+  clockText=label+' · '+Math.floor(timeLeft/60)+':'+String(timeLeft%60).padStart(2,'0');
+ }
+ clock.hidden=!started;if(clock.textContent!==clockText){clock.textContent=clockText;clock.dataset.phase=phase;}
  const forward=player.vx*Math.cos(player.angle)+player.vy*Math.sin(player.angle),speedValue=Math.hypot(player.vx,player.vy),speed=speedKmh(speedValue);
  $('speed').textContent=speed;$('speedFill').style.width=Math.min(100,speedValue/(stats().maxSpeed*(turbo.active?stats().boostMultiplier:1)*speedPowerMultiplier(progress.mode))*100)+'%';$('gear').textContent=speed<2?'N':forward<-.008?'R':'D';$('distance').textContent=kmText(progress.earnedMm)+' km';$('wallet').textContent=kmText(balanceMm())+' km';$('turboFill').style.width=(turbo.charge*100)+'%';$('turboMeter').classList.toggle('boosting',turbo.active);$('turboStatus').textContent=powerActive('nitro')?'INFINITE NITRO':turbo.active?'BOOSTING':turbo.depleted?'RECHARGING':turbo.charge>.99?'TURBO READY':'TURBO '+Math.floor(turbo.charge*100)+'%';
  const r=closestRoad(player.x,player.y),surface=surfaceAt(player.x,player.y);
