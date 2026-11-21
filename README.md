@@ -1,6 +1,7 @@
 # Open City
 
-A single-file, zero-dependency HTML5 Canvas top-down open-world driving and railway game (`game.html`).
+A single-file, zero-dependency HTML5 Canvas top-down open-world driving and railway game (`game.html`). Made via Codex (GPT 6.2 Sol). 
+Contains original music (human-made)! 
 
 ## Features
 
