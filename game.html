@@ -140,7 +140,7 @@
 @media(prefers-reduced-motion:reduce){.trophy-item.trophy-awarded,.trophy-item.trophy-shake,.trophy-item.trophy-awarded::after{animation:none}}
 .train-mode:not(.rail-manual) .touch-left{display:none}.train-mode .touch .hand{color:#f3d68e}.mode-card[data-mode=train]{grid-column:span 6}@media(max-width:640px){.mode-card[data-mode=train],.mode-card[data-mode=free],.mode-card[data-mode=police]{grid-column:1}}
 body[data-input="gamepad"] .touch{display:none}
-body[data-input="gamepad"] .modal :is(button,select,#atlas):focus{outline:2px solid #e8f7ab;outline-offset:3px}
+body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):focus{outline:2px solid #e8f7ab;outline-offset:3px}
 .gamepad-menu-hint{position:fixed;z-index:11;bottom:5px;left:50%;transform:translateX(-50%);padding:5px 10px;border-radius:6px;background:#17342f;color:#e8f7ab;font-size:11px;white-space:nowrap;pointer-events:none}
 .admin-dialog{width:min(460px,100%)}
 .admin-dialog h2{margin:0 44px 25px 0}
@@ -154,6 +154,10 @@ body[data-input="gamepad"] .modal :is(button,select,#atlas):focus{outline:2px so
 .admin-switches span::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#baccb8}
 .admin-switches button[aria-checked="true"] span{border-color:#d4ed89;background:#d4ed89}
 .admin-switches button[aria-checked="true"] span::after{left:18px;background:#213d30}
+.admin-volume{display:grid;grid-template-columns:auto minmax(0,1fr) 4ch;align-items:center;gap:12px;min-height:46px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#1d3b31;color:var(--ink);font-size:14px;font-weight:700}
+.admin-volume input{width:100%;min-width:0;min-height:28px;margin:0;accent-color:var(--green);cursor:pointer}
+.admin-volume input:focus-visible{outline:2px solid #e8f7ab;outline-offset:3px}
+.admin-volume output{text-align:right;color:var(--green);font-size:12px;font-variant-numeric:tabular-nums}
 @media(max-width:420px){.admin-dialog{padding:20px}.admin-time-options button{font-size:12px;padding:4px}}
 </style>
 </head>
@@ -187,7 +191,11 @@ body[data-input="gamepad"] .modal :is(button,select,#atlas):focus{outline:2px so
    <button type="button" role="switch" data-admin-toggle="speed" aria-checked="false">Superspeed<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="nitro" aria-checked="false">Infinite nitro<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="phase" aria-checked="false">Ghost mode<span aria-hidden="true"></span></button>
-   <button type="button" role="switch" data-admin-toggle="music" aria-checked="true">Music<span aria-hidden="true"></span></button>
+   <div class="admin-volume">
+    <label for="musicVolume">Music volume</label>
+    <input id="musicVolume" type="range" min="0" max="100" step="1" value="45" aria-valuetext="45%">
+    <output id="musicVolumeValue" for="musicVolume" aria-hidden="true">45%</output>
+   </div>
   </div>
  </section>
 </div>
@@ -260,7 +268,7 @@ const DAY_PHASES={
  sunrise:{label:'Sunrise',end:DAY_CYCLE_MS}
 };
 const DAY_TRAFFIC_LIMIT=48,NIGHT_TRAFFIC_LIMIT=24;
-let dayCycleMs=0;
+let dayCycleMs=0,dayCycleIndex=0;
 const MINIMAP_SPAN=1900,MINIMAP_LOOK_AHEAD=480,MINIMAP_CACHE_PAD=64;
 const minimapView={offsetX:0,offsetY:0,terrain:document.createElement('canvas'),cachedRegion:null};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -4627,9 +4635,10 @@ function cleanGarage(raw,kind,legacy=false){
  return clean;
 }
 function cleanAdminSettings(raw){
+ const musicVolume=Number.isFinite(raw?.musicVolume)?Math.round(clamp(raw.musicVolume,0,100)):raw?.music===false?0:45;
  return {
   time:raw?.time==='day'||raw?.time==='night'?raw.time:'cycle',
-  npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,music:raw?.music!==false
+  npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,musicVolume
  };
 }
 function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,position:null,railPosition:null,garages:{train:freshGarage('train'),car:freshGarage('car'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
@@ -5174,8 +5183,9 @@ function updateGamepadMenuHint(){
  const hint=$('gamepadMenuHint');
  hint.hidden=inputDevice!=='gamepad'||!activeModal;
  if(hint.hidden)return;
- const text=inputHint('',document.activeElement?.tagName==='SELECT'?
-  'D-pad ← / → Choose type · {confirm} Find · {back} Back':'D-pad Navigate · {confirm} Select · {back} Back');
+ const focused=document.activeElement;
+ const text=inputHint('',focused?.type==='range'?'D-pad ← / → Adjust volume · ↑ / ↓ Navigate · {back} Back':
+  focused?.tagName==='SELECT'?'D-pad ← / → Choose type · {confirm} Find · {back} Back':'D-pad Navigate · {confirm} Select · {back} Back');
  if(hint.textContent!==text)hint.textContent=text;
 }
 function setInputDevice(device,layout=gamepad.layout){
@@ -5211,12 +5221,21 @@ function gamepadAxis(value,deadZone){
 }
 function modalControls(){
  const scope=activeModal==='trophyModal'&&trophyPending?'trophyConfirmation':activeModal;
- return [...$(scope).querySelectorAll('button, select, #atlas[tabindex="0"]')].filter(el=>!el.disabled&&el.getClientRects().length);
+ return [...$(scope).querySelectorAll('button, select, input[type="range"], #atlas[tabindex="0"]')].filter(el=>!el.disabled&&el.getClientRects().length);
 }
 function moveGamepadFocus(direction){
  const controls=modalControls(),focused=document.activeElement;
  if(!controls.includes(focused)){controls[0]?.focus();return;}
  const x=Number(direction==='right')-Number(direction==='left'),y=Number(direction==='down')-Number(direction==='up');
+ if(focused.type==='range'&&x){
+  const previous=focused.value;
+  focused.stepUp(5*x);
+  if(focused.value!==previous){
+   focused.dispatchEvent(new Event('input',{bubbles:true}));
+   focused.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  return;
+ }
  if(focused.tagName==='SELECT'&&x){
   const options=[...focused.options].filter(option=>!option.disabled);
   const index=options.indexOf(focused.selectedOptions[0]);
@@ -5266,7 +5285,7 @@ function useGamepadMenu(sample,pressed,now,elapsed){
   else if(focused.tagName==='SELECT'){
    if(!focused.value)focused.selectedIndex=1;
    focused.dispatchEvent(new Event('change',{bubbles:true}));
-  }else focused.click();
+  }else if(focused.type!=='range')focused.click();
  }
  updateGamepadMenuHint();
 }
@@ -5985,35 +6004,88 @@ function drawRouteDestination(){
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2800);}
 function clearKeys(){resetGamepadDrive();turbo.active=false;for(const k of Object.keys(keys))delete keys[k];document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));}
 const MUSIC_TRACKS={day:['Day_1.m4a','Day_2.m4a'],night:['Night.m4a']};
-let musicAudio=null,musicPhase=null,musicTrackSelected=false,musicAutoplayBlocked=false;
-function syncMusic(){
+const MUSIC_CROSSFADE_MS=2000;
+let musicAudio=null,fadingMusicAudio=null,musicFadeMs=MUSIC_CROSSFADE_MS;
+let musicPhase=null,musicFarm=null,musicOverride=null,musicAutoplayBlocked=false;
+function applyMusicVolume(){
+ const volume=progress.admin.musicVolume/100,mix=musicFadeMs/MUSIC_CROSSFADE_MS;
+ if(musicAudio)musicAudio.volume=volume*mix;
+ if(fadingMusicAudio)fadingMusicAudio.volume=volume*(1-mix);
+}
+function stopMusicFade(){
+ fadingMusicAudio?.pause();
+ fadingMusicAudio=null;
+ musicFadeMs=MUSIC_CROSSFADE_MS;
+}
+function hempFarmAtPlayer(){
+ const {x,y}=player,i=roadIndex(x,0),j=roadIndex(y,1);
+ const scene=chunks.get(i+','+j)?.scene;
+ if(scene?.reserveBiome!=='hemp')return null;
+ const {left,right,top,bottom}=scene.land;
+ return x>=left&&x<=right&&y>=top&&y<=bottom?scene.reserve:null;
+}
+function startHempMusic(){
+ const previous=musicAudio,audio=new Audio();
+ if(previous&&!previous.ended&&(!previous.paused||previous.currentTime>0))fadingMusicAudio=previous;
+ musicAudio=audio;
+ musicOverride='hemp';
+ musicAutoplayBlocked=false;
+ musicFadeMs=0;
+ const finish=()=>{
+  if(musicAudio!==audio)return;
+  stopMusicFade();
+  musicAudio=null;
+  musicOverride='waiting';
+  musicPhase=dayPhase();
+  musicAutoplayBlocked=false;
+ };
+ audio.addEventListener('ended',finish,{once:true});
+ audio.addEventListener('error',finish,{once:true});
+ audio.src='Hemp.m4a';
+ applyMusicVolume();
+}
+function syncMusic(phase=dayPhase(),farm=hempFarmAtPlayer()){
  if(!started)return;
- const phase=dayPhase(),tracks=MUSIC_TRACKS[phase];
- if(phase!==musicPhase){
-  musicPhase=phase;
-  // A new day or night gets one track. Twilight lets the existing track finish.
-  if(tracks){
-   musicAudio?.pause();
-   musicTrackSelected=false;
-   musicAutoplayBlocked=false;
-  }
- }
- if(!progress.admin.music||activeModal||document.hidden){
+ const tracks=MUSIC_TRACKS[phase],phaseChanged=phase!==musicPhase;
+ const enteredFarm=farm!==null&&farm!==musicFarm;
+ musicPhase=phase;
+ musicFarm=farm;
+ // Once Hemp ends, only the start of a day or night can resume the playlist.
+ if(musicOverride==='waiting'&&phaseChanged&&tracks)musicOverride=null;
+ if(enteredFarm&&!musicOverride)startHempMusic();
+ else if(phaseChanged&&tracks&&!musicOverride){
   musicAudio?.pause();
+  musicAudio=null;
+  musicAutoplayBlocked=false;
+ }
+ if(activeModal||document.hidden){
+  musicAudio?.pause();
+  fadingMusicAudio?.pause();
   return;
  }
- const selectTrack=tracks&&!musicTrackSelected;
- if(selectTrack){
-  if(!musicAudio){musicAudio=new Audio();musicAudio.volume=.45;}
-  musicAudio.src=tracks.length===1?tracks[0]:tracks[Math.floor(Math.random()*tracks.length)];
-  musicTrackSelected=true;
+ if(musicOverride==='waiting')return;
+ if(tracks&&!musicAudio){
+  musicAudio=new Audio();
+  musicAudio.src=tracks[dayCycleIndex%tracks.length];
+  applyMusicVolume();
  }
- if(!musicTrackSelected||musicAutoplayBlocked||
-    !selectTrack&&(!musicAudio.paused||musicAudio.ended||!tracks&&musicAudio.currentTime===0))return;
- const source=musicAudio.src;
- musicAudio.play().catch(error=>{
-  if(error.name==='NotAllowedError'&&musicPhase===phase&&musicAudio.src===source)musicAutoplayBlocked=true;
- });
+ const audio=musicAudio;
+ if(!audio||musicAutoplayBlocked)return;
+ if(audio.paused&&!audio.ended&&(tracks||musicOverride==='hemp'||audio.currentTime>0)){
+  audio.play().catch(error=>{
+   if(error.name==='NotAllowedError'&&musicAudio===audio)musicAutoplayBlocked=true;
+  });
+ }
+ if(fadingMusicAudio?.paused&&!fadingMusicAudio.ended)fadingMusicAudio.play().catch(()=>{});
+}
+function updateMusic(dt){
+ const phase=dayPhase(),farm=hempFarmAtPlayer();
+ if(phase!==musicPhase||farm!==musicFarm)syncMusic(phase,farm);
+ // Keep the outgoing song audible while Hemp is loading.
+ if(musicFadeMs>=MUSIC_CROSSFADE_MS||musicAudio.paused||musicAudio.currentTime===0)return;
+ musicFadeMs=Math.min(MUSIC_CROSSFADE_MS,musicFadeMs+dt);
+ applyMusicVolume();
+ if(musicFadeMs===MUSIC_CROSSFADE_MS)stopMusicFade();
 }
 function retryMusic(){
  if(!musicAutoplayBlocked)return;
@@ -6024,8 +6096,22 @@ document.addEventListener('click',retryMusic);
 document.addEventListener('keydown',retryMusic);
 document.addEventListener('pointerup',retryMusic);
 function start(){if(started)return;started=true;syncMusic();$('intro').hidden=true;document.body.classList.add('driving');canvas.focus({preventScroll:true});if(progress.policeEnabled&&progress.admin.npcs){deployPolice();toast('Police pursuit on. Keep moving.');}else if(JOB_MODES.includes(progress.mode))toast(GAME_MODES[progress.mode].name+(jobTarget()?' · Your accepted job is ready to resume.':' · '+inputHint('Press E to accept a job.','Press {confirm} to accept a job.'))); else toast('Welcome to '+neighbourhood(player.x,player.y)+'. Take any turn.');ensureJobOffer();updateHUD();updatePoliceHUD();}
+function renderMusicVolume(){
+ const slider=$('musicVolume'),volume=progress.admin.musicVolume;
+ if(slider.valueAsNumber!==volume)slider.value=volume;
+ const percent=volume+'%';
+ $('musicVolumeValue').textContent=percent;
+ slider.setAttribute('aria-valuetext',percent);
+}
+$('musicVolume').addEventListener('input',event=>{
+ progress.admin.musicVolume=event.currentTarget.valueAsNumber;
+ applyMusicVolume();
+ renderMusicVolume();progressDirty=true;
+});
+$('musicVolume').addEventListener('change',saveProgress);
 function renderAdminPanel(){
  const settings=progress.admin;
+ renderMusicVolume();
  for(const button of $('adminModal').querySelectorAll('[data-admin-time]'))button.setAttribute('aria-pressed',String(settings.time===button.dataset.adminTime));
  for(const button of $('adminModal').querySelectorAll('[data-admin-toggle]'))button.setAttribute('aria-checked',String(settings[button.dataset.adminToggle]));
 }
@@ -6140,6 +6226,7 @@ addEventListener('keydown',e=>{
   else if(!e.shiftKey&&(focused===end||fromTrophyCard)){first?.focus();e.preventDefault();}
   return;
  }
+ if(activeModal&&e.target?.type==='range'&&key.startsWith('arrow'))return;
  if(activeModal==='mapModal'&&e.target?.tagName==='SELECT'&&['arrowup','arrowdown','arrowleft','arrowright',' ','enter'].includes(key))return;
  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key)){if(key!==' '||document.activeElement.tagName!=='BUTTON')e.preventDefault();}
  if(e.repeat&&['r','m','g','b','c','v','e','n','escape','p'].includes(key))return;
@@ -7404,12 +7491,9 @@ function refreshTrafficForDayPhase(){
 function physics(dt){
  if(started&&progress.admin.time==='cycle'){
   const previousPhase=dayPhase();
-  dayCycleMs=(dayCycleMs+dt)%DAY_CYCLE_MS;
-  const phase=dayPhase();
-  if(phase!==previousPhase){
-   if((previousPhase==='night')!==(phase==='night'))refreshTrafficForDayPhase();
-   syncMusic();
-  }
+  dayCycleMs+=dt;
+  if(dayCycleMs>=DAY_CYCLE_MS){dayCycleMs-=DAY_CYCLE_MS;dayCycleIndex++;}
+  if((previousPhase==='night')!==(dayPhase()==='night'))refreshTrafficForDayPhase();
  }
  streamWorld();maintainTraffic(dt);if(started){tickPowers(dt);maintainPursuit(dt);}
  physicsTick++;activeBodies.length=0;
@@ -7443,6 +7527,7 @@ function physics(dt){
  // Finish removals after the contact passes, without changing their iteration order.
  if(vehicleRemovalPending){for(let i=bodies.length-1;i>=0;i--)if(bodies[i].destroyed)bodies.splice(i,1);rebuildDynamic();vehicleRemovalPending=false;}
  if(started){const travelled=Math.min(Math.hypot(player.x-oldX,player.y-oldY),intendedTravel);if(travelled>.02)earnDistance(travelled*.8);finishGhostExit();if(progress.mode!=='train')updatePickups(dt,travelled);updateJob(dt);saveClock+=dt;if(saveClock>=3000){saveClock=0;if(progressDirty)queueProgressSave();}if(progress.mode!=='train'&&simTime%1000<dt){const r=closestRoad(player.x,player.y);if(Math.min(r.dx,r.dy)<35&&clearSpot(player))safePosition={x:player.x,y:player.y,angle:player.angle};}}
+ if(started)updateMusic(dt);
  for(let i=skids.length-1;i>=0;i--){skids[i].life-=dt;if(skids[i].life<=0)skids.splice(i,1);}
  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.life<=0)particles.splice(i,1);}
  for(let i=explosions.length-1;i>=0;i--){explosions[i].age+=dt;if(explosions[i].age>=900)explosions.splice(i,1);}
