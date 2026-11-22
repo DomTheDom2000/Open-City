@@ -2969,11 +2969,11 @@ function prepareNextChunk(){
 }
 function queueChunkPreparation(frameStart){
  if(chunkPreparationQueued)return;
- const tile=nextSceneryTile();
- if(!tile&&!pendingChunks.length)return;
+ const next=nextSceneryLayer();
+ if(!next&&!pendingChunks.length)return;
  if(typeof requestIdleCallback!=='function'){
   if(performance.now()-frameStart<3){
-   if(tile)prepareSceneryTile(tile,shouldPrepareNightTiles());
+   if(next)sceneryImage(next.tile,next.layer);
    else prepareNextChunk();
   }
   return;
@@ -2982,11 +2982,10 @@ function queueChunkPreparation(frameStart){
  requestIdleCallback(deadline=>{
   chunkPreparationQueued=false;
   if(activeModal||document.hidden)return;
-  const night=shouldPrepareNightTiles();
-  // Warm the next scenery before it enters the view, within this idle budget.
+  // Prepare individual layers ahead of the camera within the idle budget.
   for(let n=0;n<3&&(deadline.timeRemaining()>1.5||n===0&&deadline.didTimeout);n++){
-   const next=nextSceneryTile();
-   if(next)prepareSceneryTile(next,night);
+   const next=nextSceneryLayer();
+   if(next)sceneryImage(next.tile,next.layer);
    else if(pendingChunks.length)prepareNextChunk();
    else break;
   }
@@ -3705,6 +3704,7 @@ function railClearance(t,dir,braking,reserve=true){
 }
 function railUpdatePlayer(dt){
  const t=railway.player;if(!t)return;const st=stats('train'),up=throttleInput(),down=reverseInput(),emergency=brakeInput(),previous=t.speed;
+ t.prevSpeed=previous;
  const accelerating=up&&!down&&t.speed>.06||down&&!up&&t.speed<-.06;
  const infiniteNitro=powerActive('nitro');
  const wantsBoost=boostInput()&&accelerating&&!emergency&&(garageState().performance.turbo>0||infiniteNitro);
@@ -4100,43 +4100,22 @@ function railDrawStation(g,s,map=false){
  return true;
 }
 function railTrackOpacity(){return progress.mode==='train'?1:.28;}
-function railSceneryTiles(pieces,stations){
- const {width,height}=ctx.canvas,{scale,l,t}=sceneryCache.rail,step=128;
- const cols=Math.ceil(width/step),rows=Math.ceil(height/step),occupied=new Uint8Array(cols*rows);
- const mark=(left,top,right,bottom)=>{
-  const x0=Math.max(0,Math.floor((left-l)*scale/step)),x1=Math.min(cols-1,Math.floor((right-l)*scale/step));
-  const y0=Math.max(0,Math.floor((top-t)*scale/step)),y1=Math.min(rows-1,Math.floor((bottom-t)*scale/step));
-  if(x0>x1)return;
-  for(let y=y0;y<=y1;y++)occupied.fill(1,y*cols+x0,y*cols+x1+1);
- };
- for(const p of pieces)for(const s of p.route.segments){
-  const ex=s.x+s.dx,ey=s.y+s.dy,pad=55;
-  mark(Math.min(s.x,ex)-pad,Math.min(s.y,ey)-pad,Math.max(s.x,ex)+pad,Math.max(s.y,ey)+pad);
- }
- for(const s of stations)mark(s.x-230,s.y-120,s.x+230,s.y+60);
- // Merge adjacent occupied cells into strips so empty pixels aren't blended every frame.
- const tiles=[];
- for(let row=0;row<rows;row++){
-  const y=row*step;
-  for(let col=0;col<cols;){
-   if(!occupied[row*cols+col]){col++;continue;}
-   const x=col*step;
-   do{col++;}while(col<cols&&occupied[row*cols+col]);
-   tiles.push({x,y,r:Math.min(width,col*step),b:Math.min(height,y+step)});
+function drawSceneryRailTile(tile){
+ const {l,t,r,b}=tile,pad=55;
+ const pieces=railway.local.filter(p=>p.r>=l&&p.l<=r&&p.b>=t&&p.t<=b&&p.route.segments.some(s=>{
+  const x=s.x+s.dx,y=s.y+s.dy;
+  return Math.max(s.x,x)+pad>=l&&Math.min(s.x,x)-pad<=r&&Math.max(s.y,y)+pad>=t&&Math.min(s.y,y)-pad<=b;
+ }));
+ const stations=railway.localStations.filter(s=>s.x+260>=l&&s.x-260<=r&&s.y+140>=t&&s.y-140<=b);
+ if(!pieces.length&&!stations.length)return null;
+ return renderSceneryTile(tile,()=>{
+  railDrawTracks(ctx,pieces);
+  for(const p of pieces)if(p.kind==='e')for(let d=140;d<p.length;d+=320){
+   const q=routeAt(p.route,d);if(!visible(q.x,q.y,55))continue;
+   ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.angle);ctx.fillStyle='#4f6259';ctx.fillRect(-5,-33,10,7);ctx.fillRect(-5,26,10,7);ctx.fillStyle='#d5d3bb';ctx.fillRect(-4,-33,8,3);ctx.fillRect(-4,26,8,3);ctx.restore();
   }
- }
- return tiles;
-}
-function railDrawElevated(){
- const pieces=railway.local.filter(p=>p.r+25>=bounds.l&&p.l-25<=bounds.r&&p.b+25>=bounds.t&&p.t-25<=bounds.b);
- railDrawTracks(ctx,pieces);
- for(const p of pieces)if(p.kind==='e')for(let d=140;d<p.length;d+=320){
-  const q=routeAt(p.route,d);if(!visible(q.x,q.y,55))continue;
-  ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.angle);ctx.fillStyle='#4f6259';ctx.fillRect(-5,-33,10,7);ctx.fillRect(-5,26,10,7);ctx.fillStyle='#d5d3bb';ctx.fillRect(-4,-33,8,3);ctx.fillRect(-4,26,8,3);ctx.restore();
- }
- const stations=railway.localStations.filter(s=>railDrawStation(ctx,s));
- sceneryCache.railTiles=railSceneryTiles(pieces,stations);
- return sceneryCache.railTiles.length>0;
+  for(const station of stations)railDrawStation(ctx,station);
+ });
 }
 function railDrawJunctionChoice(){
  const pending=railway.manualTurn;if(progress.mode!=='train'||jobTarget()||!pending?.connector)return;
@@ -4145,51 +4124,23 @@ function railDrawJunctionChoice(){
  const node=railNode(piece.i,piece.j);textAt(pending.choice<0?'← LEFT':pending.choice>0?'RIGHT →':'STRAIGHT',node.x,node.y-RAIL_BEND-35,9,'#f1edba');ctx.restore();
 }
 const railFadeCanvas=document.createElement('canvas');
-const railNightCache={canvas:document.createElement('canvas'),build:-1};
 function shadeRailLayer(g,w,h,night){
  g.save();g.setTransform(1,0,0,1,0,0);
  g.globalCompositeOperation='source-atop';g.globalAlpha=night*.46;
  g.fillStyle='#000';g.fillRect(0,0,w,h);g.restore();
 }
-function paintRailTiles(source,exclude){
- const {railTiles,rail:{scale,l,t}}=sceneryCache,transform=ctx.getTransform(),{width,height}=ctx.canvas;
- const dx=Math.round(l*scale+transform.e),dy=Math.round(t*scale+transform.f);
- ctx.save();ctx.setTransform(1,0,0,1,dx,dy);
- const paint=(x,y,w,h)=>{
-  if(w>0&&h>0)ctx.drawImage(source,x,y,w,h,x,y,w,h);
- };
- const left=exclude?exclude.x-dx:Infinity,top=exclude?exclude.y-dy:Infinity;
- const right=exclude?left+exclude.w:-Infinity,bottom=exclude?top+exclude.h:-Infinity;
- for(const {x,y,r,b} of railTiles){
-  if(r+dx<=0||x+dx>=width||b+dy<=0||y+dy>=height)continue;
-  if(r<=left||x>=right||b<=top||y>=bottom){paint(x,y,r-x,b-y);continue;}
-  const x0=Math.max(x,left),x1=Math.min(r,right),y0=Math.max(y,top),y1=Math.min(b,bottom);
-  paint(x,y,x0-x,b-y);paint(x1,y,r-x1,b-y);
-  paint(x0,y,x1-x0,y0-y);paint(x0,y1,x1-x0,b-y1);
- }
- ctx.restore();
+function drawSceneryRailNightTile(tile){
+ const rail=sceneryImage(tile,'rail');
+ if(!rail)return null;
+ const {canvas,g}=makeSceneryTileCanvas();
+ g.drawImage(rail,0,0);shadeRailLayer(g,canvas.width,canvas.height,1);
+ return canvas;
 }
 function paintRailScenery(night,exclude){
- if(!sceneryCache.hasRails)return;
- const source=sceneryCache.railElevated;
- if(night===1){
-  const cache=railNightCache,layer=cache.canvas,w=source.width,h=source.height;
-  if(cache.build!==sceneryCache.rail.builds){
-   if(layer.width!==w||layer.height!==h){layer.width=w;layer.height=h;}
-   const g=layer.getContext('2d');
-   g.clearRect(0,0,w,h);
-   for(const {x,y,r,b} of sceneryCache.railTiles)g.drawImage(source,x,y,r-x,b-y,x,y,r-x,b-y);
-   g.globalCompositeOperation='source-atop';g.globalAlpha=night*.46;g.fillStyle='#000';
-   for(const {x,y,r,b} of sceneryCache.railTiles)g.fillRect(x,y,r-x,b-y);
-   g.globalCompositeOperation='source-over';g.globalAlpha=1;
-   cache.build=sceneryCache.rail.builds;
-  }
-  paintRailTiles(layer,exclude);
- }else{
-  ctx.save();
-  if(night)ctx.filter='brightness('+(1-night*.46)+')';
-  paintRailTiles(source,exclude);ctx.restore();
- }
+ if(night===1){paintSceneryTiles('railNight',exclude);return;}
+ ctx.save();
+ if(night)ctx.filter='brightness('+(1-night*.46)+')';
+ paintSceneryTiles('rail',exclude);ctx.restore();
 }
 function railTrainPatch(trains,night,transform){
  const {a,d,e,f}=transform;
@@ -5175,12 +5126,14 @@ function drawGarageCar(look=equippedAppearance,kind=garageKindForMode()){
 
 let viewW=innerWidth,viewH=innerHeight,pixelRatio=1,zoom=1.55;
 const camera={x:player.x,y:player.y},cameraTarget={...camera};
+const MAX_CAMERA_FRAME_MS=1000/30;
 function snapCamera(x,y){
  camera.x=cameraTarget.x=x;camera.y=cameraTarget.y=y;
 }
 function followCamera(x,y,elapsed){
  if(elapsed>0){
-  const time=elapsed*.005,blend=-Math.expm1(-time),travel=1-blend/time;
+  // Ease the pan back toward its target after a missed frame.
+  const time=Math.min(elapsed,MAX_CAMERA_FRAME_MS)*.005,blend=-Math.expm1(-time),travel=1-blend/time;
   // Integrate the moving target over the frame so an uneven interval doesn't
   // briefly speed up or slow down a steady pan.
   camera.x+=(cameraTarget.x-camera.x)*blend+(x-cameraTarget.x)*travel;
@@ -5191,6 +5144,10 @@ function followCamera(x,y,elapsed){
 const renderedPlayer={x:player.x,y:player.y,angle:player.angle};
 let renderAlpha=1;
 function snapshotBody(c){c.prevX=c.x;c.prevY=c.y;c.prevAngle=c.angle;}
+function snapshotPlayer(){
+ snapshotBody(player);
+ player.prevVx=player.vx;player.prevVy=player.vy;
+}
 function interpolatePlayer(){
  const train=progress.mode==='train'?railway.player:null;
  if(train){
@@ -5463,7 +5420,7 @@ function setGameMode(mode,announce=true){
  if(Math.hypot(placement.x-oldPos.x,placement.y-oldPos.y)>.5){Object.assign(player,placement,{vx:0,vy:0});snapCamera(player.x,player.y);powers.exitBodies.clear();}
  if(leavingRail||mode==='train'){streamWorld(true);sceneryCache.valid=false;minimapView.cachedRegion=null;}
  if(leavingRail)railway.roadSpawnIn=Math.min(railway.roadSpawnIn,2400);
- player.hit=0;snapshotBody(player);interpolatePlayer();turbo.active=false;shake=0;
+ player.hit=0;snapshotPlayer();interpolatePlayer();turbo.active=false;shake=0;
  Object.assign(service,{jobId:null,ms:0,retryIn:0});routeNavigation.key='';routeNavigation.points=[];
  if(!progress.policeEnabled){police.length=0;Object.assign(policeState,{hits:0,reinforcements:0,reinforceIn:POLICE_BACKUP_DELAY,scanIn:0,dispatchFor:0});}
  else if(started)deployPolice();
@@ -6238,7 +6195,7 @@ function closeModal(){
  $(activeModal).hidden=true;activeModal=null;syncMusic();clearKeys();updateGamepadMenuHint();
  $('pauseBtn').textContent='Ⅱ';$('pauseBtn').setAttribute('aria-label','Pause game');
  if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});else canvas.focus({preventScroll:true});
- last=performance.now();accumulator=0;
+ last=performance.now();
 }
 function openModal(id){
  if(activeModal===id){closeModal();return;}
@@ -6327,7 +6284,7 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>delete keys[e.key.toLowerCase()]);
 addEventListener('pagehide',()=>{if(progressDirty)saveProgress();});
 addEventListener('blur',()=>{gamepad.suspended=true;if(progressDirty)saveProgress();clearKeys();if(started&&!activeModal)openModal('pauseModal');});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){gamepad.suspended=true;if(progressDirty)saveProgress();clearKeys();if(started&&!activeModal)openModal('pauseModal');}syncMusic();last=performance.now();accumulator=0;});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){gamepad.suspended=true;if(progressDirty)saveProgress();clearKeys();if(started&&!activeModal)openModal('pauseModal');}syncMusic();last=performance.now();});
 document.querySelectorAll('[data-key]').forEach(button=>{
  button.addEventListener('pointerdown',e=>{e.preventDefault();if(activeModal)return;if(!started)start();button.setPointerCapture(e.pointerId);keys[button.dataset.key]=true;if(['a','d'].includes(button.dataset.key))railSetManualTurn(button.dataset.key==='a'?-1:1);button.classList.add('held');});
  for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,()=>{delete keys[button.dataset.key];button.classList.remove('held');});
@@ -6738,7 +6695,7 @@ function clearSpot(candidate){
  return true;
 }
 function recover(){
- if(progress.mode==='train'){const p=railEnter();if(p){Object.assign(player,p,{vx:0,vy:0});snapshotBody(player);snapCamera(p.x,p.y);streamWorld(true);sceneryCache.valid=false;minimapView.cachedRegion=null;saveProgress();toast('Train placed on a clear railway.');}return;}
+ if(progress.mode==='train'){const p=railEnter();if(p){Object.assign(player,p,{vx:0,vy:0});snapshotPlayer();snapCamera(p.x,p.y);streamWorld(true);sceneryCache.valid=false;minimapView.cachedRegion=null;saveProgress();toast('Train placed on a clear railway.');}return;}
  streamWorld();const candidates=[];
  for(const seg of navigation.segments){const p=projectSegment(player.x,player.y,seg.a,seg.b);if(p.distance>1100)continue;const side=seg.width>80?22:0;
   for(const delta of [0,50,-50,100,-100])for(const offset of [side,-side])candidates.push({x:p.x+Math.cos(p.angle)*delta-Math.sin(p.angle)*offset,y:p.y+Math.sin(p.angle)*delta+Math.cos(p.angle)*offset,angle:p.angle});
@@ -6747,7 +6704,7 @@ function recover(){
  let p=candidates.find(p=>insideLoaded(p.x,p.y,65)&&clearSpot({...player,...p}));
  if(!p&&insideLoaded(safePosition.x,safePosition.y,65)&&clearSpot({...player,...safePosition}))p=safePosition;
  if(!p){toast('No clear recovery spot nearby. Try again in a moment.');return;}
- Object.assign(player,p,{vx:0,vy:0,hit:0});snapshotBody(player);interpolatePlayer();turbo.active=false;safePosition={...p};snapCamera(p.x,p.y);shake=0;powers.exitBodies.clear();progressDirty=true;rebuildDynamic();toast('Back on the road. Keep exploring.');
+ Object.assign(player,p,{vx:0,vy:0,hit:0});snapshotPlayer();interpolatePlayer();turbo.active=false;safePosition={...p};snapCamera(p.x,p.y);shake=0;powers.exitBodies.clear();progressDirty=true;rebuildDynamic();toast('Back on the road. Keep exploring.');
 }
 function updatePlayer(dt){
  const accel=throttleInput(),brake=reverseInput(),handbrake=brakeInput();
@@ -7576,7 +7533,7 @@ function physics(dt){
  for(const c of traffic){snapshotBody(c);c.activeTick=physicsTick;activeBodies.push(c);}
  for(const c of police){snapshotBody(c);c.activeTick=physicsTick;activeBodies.push(c);}
  for(const c of parked){snapshotBody(c);if(Math.abs(c.vx)+Math.abs(c.vy)>.00002){c.activeTick=physicsTick;activeBodies.push(c);}else c.vx=c.vy=0;}
- snapshotBody(player);if(started&&progress.mode!=='train'){player.activeTick=physicsTick;activeBodies.push(player);}
+ snapshotPlayer();if(started&&progress.mode!=='train'){player.activeTick=physicsTick;activeBodies.push(player);}
  simTime+=dt;impactCooldown-=dt;player.hit=Math.max(0,player.hit-dt);
  rebuildDynamic();updateTrafficJunctions(dt);if(started&&progress.mode!=='train')updatePlayer(dt);
  for(const c of traffic)updateTraffic(c,dt);
@@ -9664,63 +9621,84 @@ function drawExplosions(){
   ctx.restore();
  }
 }
-// Keep static roofs and night lighting in world-aligned tiles. Scrolling can
-// bring in one tile at a time without rebuilding either whole viewport layer.
+// World-aligned tile images stay in place as the view scrolls across them.
 const SCENERY_TILE_SIZE=384;
-const sceneryTiles={scale:0,tiles:new Map()};
-function makeSceneryTileCanvas(){
+const sceneryCache={scale:0,tiles:new Map(),valid:false};
+function makeSceneryTileCanvas(alpha=true){
  const canvas=document.createElement('canvas');canvas.width=canvas.height=SCENERY_TILE_SIZE;
- return {canvas,g:canvas.getContext('2d')};
+ return {canvas,g:canvas.getContext('2d',{alpha})};
 }
-function validSceneryTile(tile){return tile.complete||tile.generation===worldWindow.generation;}
 function sceneryTile(i,j){
- const {tiles,scale}=sceneryTiles,key=i+','+j,old=tiles.get(key);
- if(old&&validSceneryTile(old))return old;
+ const {tiles,scale}=sceneryCache,key=i+','+j,old=tiles.get(key);
+ if(old&&(old.complete||old.generation===worldWindow.generation))return old;
  const x=i*SCENERY_TILE_SIZE,y=j*SCENERY_TILE_SIZE,l=x/scale,t=y/scale,r=(x+SCENERY_TILE_SIZE)/scale,b=(y+SCENERY_TILE_SIZE)/scale;
  const tile={x,y,l,t,r,b,scale,generation:worldWindow.generation,complete:insideLoaded(l,t,180)&&insideLoaded(r,b,180)};
  tiles.set(key,tile);
  return tile;
 }
-function drawSceneryRoofTile(tile){
+function renderSceneryTile(tile,paint,alpha=true,pad=0){
+ const {canvas,g}=makeSceneryTileCanvas(alpha),screen=ctx,viewport=bounds;
  const {l,t,r,b,scale,x,y}=tile;
+ ctx=g;bounds={l:l-pad,t:t-pad,r:r+pad,b:b+pad};
+ g.setTransform(scale,0,0,scale,-x,-y);
+ try{paint();}finally{ctx=screen;bounds=viewport;}
+ return canvas;
+}
+function drawSceneryGroundTile(tile){
+ // Include road edges and decorations that extend into the tile from outside it.
+ return renderSceneryTile(tile,drawGroundScenery,false,110);
+}
+function drawSceneryRoofTile(tile){
+ const {l,t,r,b}=tile;
  const roofs=buildings.filter(roof=>{
   const pad=(roof.height||8)+5;
   return roof.x+roof.hw+pad>=l&&roof.x-roof.hw-pad<=r&&roof.y+roof.hh+pad>=t&&roof.y-roof.hh-pad<=b;
  });
  if(!roofs.length)return null;
- const {canvas,g}=makeSceneryTileCanvas(),screen=ctx;
- g.setTransform(scale,0,0,scale,-x,-y);ctx=g;
- try{for(const roof of roofs)drawBuilding(roof);}
- finally{ctx=screen;}
- return canvas;
+ return renderSceneryTile(tile,()=>{for(const roof of roofs)drawBuilding(roof);});
+}
+const SCENERY_PAINTERS={ground:drawSceneryGroundTile,roof:drawSceneryRoofTile,rail:drawSceneryRailTile,night:drawSceneryNightTile,railNight:drawSceneryRailNightTile};
+function sceneryImage(tile,layer){
+ if(tile[layer]===undefined){
+  tile[layer]=SCENERY_PAINTERS[layer](tile);
+  if(layer==='rail'&&!tile.rail)tile.railNight=null;
+ }
+ return tile[layer];
 }
 function shouldPrepareNightTiles(){return progress.admin.time==='night'||progress.admin.time==='cycle'&&dayCycleMs>=DAY_PHASES.day.end-1800;}
-function prepareSceneryTile(tile,night){
- if(tile.roof===undefined){tile.roof=drawSceneryRoofTile(tile);return;}
- if(night&&tile.night===undefined)tile.night=drawSceneryNightTile(tile);
+function missingSceneryLayer(tile,night){
+ if(tile.ground===undefined)return 'ground';
+ if(tile.roof===undefined)return 'roof';
+ if(tile.rail===undefined)return 'rail';
+ if(night&&tile.night===undefined)return 'night';
+ if(night&&tile.rail&&tile.railNight===undefined)return 'railNight';
+ return null;
 }
-function paintSceneryTiles(layer){
- const scale=pixelRatio*zoom,step=SCENERY_TILE_SIZE,transform=ctx.getTransform(),dx=transform.e,dy=transform.f;
- if(sceneryTiles.scale!==scale){sceneryTiles.tiles.clear();sceneryTiles.scale=scale;}
- const i0=Math.floor(-dx/step),i1=Math.floor((canvas.width-1-dx)/step);
- const j0=Math.floor(-dy/step),j1=Math.floor((canvas.height-1-dy)/step);
- if(layer==='roof')for(const [key,tile] of sceneryTiles.tiles){
-  if(tile.x<(i0-2)*step||tile.x>(i1+2)*step||tile.y<(j0-2)*step||tile.y>(j1+2)*step)sceneryTiles.tiles.delete(key);
+function paintSceneryTiles(layer,exclude){
+ const g=ctx,{width,height}=g.canvas,scale=pixelRatio*zoom,step=SCENERY_TILE_SIZE,{e:dx,f:dy}=g.getTransform();
+ if(sceneryCache.scale!==scale){sceneryCache.tiles.clear();sceneryCache.scale=scale;}
+ const i0=Math.floor(-dx/step),i1=Math.floor((width-1-dx)/step);
+ const j0=Math.floor(-dy/step),j1=Math.floor((height-1-dy)/step);
+ if(layer==='ground')for(const [key,tile] of sceneryCache.tiles){
+  if(tile.x<(i0-2)*step||tile.x>(i1+2)*step||tile.y<(j0-2)*step||tile.y>(j1+2)*step)sceneryCache.tiles.delete(key);
  }
- ctx.save();ctx.setTransform(1,0,0,1,0,0);
+ g.save();g.setTransform(1,0,0,1,0,0);
  try{
-  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
-   const tile=sceneryTile(i,j);
-   if(tile[layer]===undefined)tile[layer]=layer==='roof'?drawSceneryRoofTile(tile):drawSceneryNightTile(tile);
-   if(tile[layer])ctx.drawImage(tile[layer],tile.x+dx,tile.y+dy);
+  if(exclude){
+   g.beginPath();g.rect(0,0,width,height);g.rect(exclude.x,exclude.y,exclude.w,exclude.h);
+   g.clip('evenodd');
   }
- }finally{ctx.restore();}
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
+   const tile=sceneryTile(i,j),image=sceneryImage(tile,layer);
+   if(image)g.drawImage(image,tile.x+dx,tile.y+dy);
+  }
+ }finally{g.restore();}
 }
-function nextSceneryTile(){
- const scale=sceneryTiles.scale;
+function nextSceneryLayer(){
+ const scale=sceneryCache.scale;
  if(!scale||scale!==pixelRatio*zoom)return;
  const night=shouldPrepareNightTiles(),step=SCENERY_TILE_SIZE;
- const pad=66,leadX=clamp(player.vx*700,-150,150),leadY=clamp(player.vy*700,-150,150);
+ const pad=96,leadX=clamp(player.vx*600,-225,225),leadY=clamp(player.vy*600,-225,225);
  const hw=viewW/(2*zoom)+pad,hh=viewH/(2*zoom)+pad;
  const i0=Math.floor((camera.x-hw+Math.min(0,leadX))*scale/step);
  const i1=Math.floor((camera.x+hw+Math.max(0,leadX))*scale/step);
@@ -9729,15 +9707,13 @@ function nextSceneryTile(){
  const aheadX=(camera.x+leadX)*scale,aheadY=(camera.y+leadY)*scale;
  let next,best=Infinity;
  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
-  const tile=sceneryTile(i,j);
-  if(tile.roof!==undefined&&(!night||tile.night!==undefined))continue;
+  const tile=sceneryTile(i,j),layer=missingSceneryLayer(tile,night);
+  if(!layer)continue;
   const dx=(tile.x+step/2-aheadX)/viewW,dy=(tile.y+step/2-aheadY)/viewH,dist=dx*dx+dy*dy;
-  if(dist<best){best=dist;next=tile;}
+  if(dist<best){best=dist;next={tile,layer};}
  }
  return next;
 }
-// Keep the road and railway artwork buffered separately from roofs and lighting.
-const sceneryCache={ground:document.createElement('canvas'),railElevated:document.createElement('canvas'),railTiles:[],rail:{valid:false,builds:0},valid:false,builds:0,uses:0};
 function drawHighwayFrontage(row,g=ctx,map=false){
  const {x,y,w,h,horizontal,color,residentialPaving}=row;
  if(!residentialPaving){g.fillStyle=color;g.fillRect(x,y,w,h);return;}
@@ -9771,83 +9747,6 @@ function drawGroundScenery(){
  for(const s of activeScenes.values())if(visible(s.x+s.w/2,s.y+s.h/2,s.w/2,s.h/2))drawSceneDetails(s);
  for(const r of navigation.roads)if(r.theme==='residential')drawResidentialStreet(r,true);
  drawStreetlampPosts();
-}
-function prepareScenery(){
- prepareGroundScenery();
- prepareRailScenery();
-}
-function prepareRailScenery(){
- const {rail:cache,railElevated:layer}=sceneryCache,scale=pixelRatio*zoom,pad=280;
- const reusable=cache.valid&&cache.scale===scale&&(cache.complete||cache.generation===worldWindow.generation);
- if(reusable&&bounds.l>=cache.l&&bounds.r<=cache.r&&bounds.t>=cache.t&&bounds.b<=cache.b)return;
- const w=Math.ceil((viewW/zoom+pad*2)*scale),h=Math.ceil((viewH/zoom+pad*2)*scale);
- const leadX=clamp(player.vx*380,-pad*.6,pad*.6),leadY=clamp(player.vy*380,-pad*.6,pad*.6);
- cache.l=Math.floor((camera.x+leadX-viewW/(2*zoom)-pad)*scale)/scale;
- cache.t=Math.floor((camera.y+leadY-viewH/(2*zoom)-pad)*scale)/scale;
- cache.r=cache.l+w/scale;cache.b=cache.t+h/scale;cache.scale=scale;
- if(layer.width!==w||layer.height!==h){layer.width=w;layer.height=h;}
- const screenContext=ctx,screenBounds=bounds;
- bounds={l:cache.l,t:cache.t,r:cache.r,b:cache.b};
- try{
-  ctx=layer.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);
-  ctx.setTransform(scale,0,0,scale,-cache.l*scale,-cache.t*scale);
-  sceneryCache.hasRails=railDrawElevated();
- }finally{ctx=screenContext;bounds=screenBounds;}
- cache.complete=insideLoaded(cache.l,cache.t,180)&&insideLoaded(cache.r,cache.b,180);
- cache.generation=worldWindow.generation;cache.valid=true;cache.builds++;
-}
-function prepareGroundScenery(){
- const cache=sceneryCache,scaleMatches=cache.scale===pixelRatio*zoom;
- const reusable=cache.valid&&scaleMatches&&(cache.complete||cache.generation===worldWindow.generation);
- if(reusable&&bounds.l>=cache.l&&bounds.r<=cache.r&&bounds.t>=cache.t&&bounds.b<=cache.b){cache.uses++;return;}
- const scale=pixelRatio*zoom,pad=160,w=Math.ceil((viewW/zoom+pad*2)*scale),h=Math.ceil((viewH/zoom+pad*2)*scale);
- // Put more of the existing buffer ahead on a sustained drive. Reserve enough
- // behind the camera to cover the visible bounds and a sudden change of direction.
- const leadX=clamp(player.vx*260,-pad*.55,pad*.55),leadY=clamp(player.vy*260,-pad*.55,pad*.55);
- const oldL=cache.l,oldT=cache.t;
- cache.l=Math.floor((camera.x+leadX-viewW/(2*zoom)-pad)*scale)/scale;cache.t=Math.floor((camera.y+leadY-viewH/(2*zoom)-pad)*scale)/scale;
- cache.r=cache.l+w/scale;cache.b=cache.t+h/scale;cache.scale=scale;
- const shiftX=Math.round((oldL-cache.l)*scale),shiftY=Math.round((oldT-cache.t)*scale);
- const reuseGround=reusable&&cache.ground.width===w&&cache.ground.height===h&&Math.abs(shiftX)<w/2&&Math.abs(shiftY)<h/2;
- const screenContext=ctx,screenBounds=bounds,fullBounds={l:cache.l,t:cache.t,r:cache.r,b:cache.b};
- bounds=fullBounds;
- try{
-  const layer=cache.ground;
-  if(layer.width!==w||layer.height!==h){layer.width=w;layer.height=h;}
-  ctx=layer.getContext('2d',{alpha:false});ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
-  if(reuseGround){
-   const x=Math.max(0,shiftX),y=Math.max(0,shiftY),cw=w-Math.abs(shiftX),ch=h-Math.abs(shiftY);
-   ctx.drawImage(layer,x-shiftX,y-shiftY,cw,ch,x,y,cw,ch);
-   const strip=(x0,y0,x1,y1)=>{
-    if(x0===x1||y0===y1)return;
-    ctx.save();ctx.beginPath();ctx.rect(x0,y0,x1-x0,y1-y0);ctx.clip();
-    ctx.setTransform(scale,0,0,scale,-cache.l*scale,-cache.t*scale);
-    bounds={l:cache.l+x0/scale,t:cache.t+y0/scale,r:cache.l+x1/scale,b:cache.t+y1/scale};
-    drawGroundScenery();
-    ctx.restore();
-   };
-   strip(shiftX>0?0:x+cw,0,shiftX>0?x:w,h);
-   strip(x,shiftY>0?0:y+ch,x+cw,shiftY>0?y:h);
-  }else{
-   ctx.setTransform(scale,0,0,scale,-cache.l*scale,-cache.t*scale);
-   drawGroundScenery();
-  }
- }finally{ctx=screenContext;bounds=screenBounds;}
- // A fully loaded patch can be reused after a chunk boundary moves behind it.
- cache.complete=insideLoaded(cache.l,cache.t,180)&&insideLoaded(cache.r,cache.b,180);
- cache.generation=worldWindow.generation;cache.valid=true;cache.builds++;
-}
-function paintScenery(layer){
- const c=sceneryCache;
- if(layer.width!==c.ground.width||layer.height!==c.ground.height){
-  ctx.drawImage(layer,c.l,c.t,c.r-c.l,c.b-c.t);return;
- }
- // The cache is already rasterized at screen resolution. Blit whole pixels
- // so a moving camera doesn't resample each large layer every frame.
- const transform=ctx.getTransform();
- const x=Math.round(c.l*c.scale+transform.e),y=Math.round(c.t*c.scale+transform.f);
- ctx.save();ctx.setTransform(1,0,0,1,x,y);
- ctx.drawImage(layer,0,0);ctx.restore();
 }
 function drawIndustrialEffects(){
  const sites=blocks.filter(b=>!b.scene&&b.type==='factory');
@@ -9902,7 +9801,7 @@ function draw(){
  ctx.setTransform(scale,0,0,scale,x,y);
  bounds={l:camera.x-viewW/(2*zoom)-45,r:camera.x+viewW/(2*zoom)+45,t:camera.y-viewH/(2*zoom)-45,b:camera.y+viewH/(2*zoom)+45};
  const phase=dayPhase(),night=nightLevel(phase);
- prepareScenery();paintScenery(sceneryCache.ground);
+ paintSceneryTiles('ground');sceneryCache.valid=true;
  for(const s of skids)if(visible(s.x,s.y,6)){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.angle);ctx.globalAlpha=Math.min(.4,s.life/11000*.5);rect(-3,-1,6,2,'#182d28');ctx.restore();}
  if(!night)drawRoadTurnGuidance();
  paintSceneryTiles('roof');
@@ -10280,31 +10179,37 @@ function loop(now){
  const elapsed=Math.min(80,Math.max(0,now-last));last=now;
  pollGamepads(now,elapsed);
  trackFrameTime(elapsed);
- if(!activeModal&&!document.hidden){accumulator+=elapsed;while(accumulator>=STEP){physics(STEP);accumulator-=STEP;}}
- // Render between fixed physics steps; whole-step positions jitter at high speed.
- else accumulator=0;
- if(!activeModal&&!document.hidden)renderAlpha=clamp(accumulator/STEP,0,1);
- interpolatePlayer();
- const train=progress.mode==='train'?railway.player:null;
- let targetX=renderedPlayer.x+player.vx*140,targetY=renderedPlayer.y+player.vy*140;
- if(train){
-  // Follow the middle carriage, with look-ahead measured along the track.
-  const focus=railSample(train,railRenderDistance(train)-RAIL_GAP+train.speed*90);
-  targetX=focus.x;targetY=focus.y;
+ const running=!activeModal&&!document.hidden;
+ if(running){
+  accumulator+=elapsed;
+  while(accumulator>=STEP){physics(STEP);accumulator-=STEP;}
+  // Use the same fraction of a physics step for position and camera look-ahead.
+  renderAlpha=clamp(accumulator/STEP,0,1);
+  interpolatePlayer();
+  const train=progress.mode==='train'?railway.player:null;
+  if(train){
+   const speed=lerp(train.prevSpeed??train.speed,train.speed,renderAlpha);
+   // Follow the middle carriage, with look-ahead measured along the track.
+   const focus=railSample(train,railRenderDistance(train)-RAIL_GAP+speed*90);
+   followCamera(focus.x,focus.y,elapsed);
+  }else{
+   const vx=lerp(player.prevVx,player.vx,renderAlpha),vy=lerp(player.prevVy,player.vy,renderAlpha);
+   followCamera(renderedPlayer.x+vx*140,renderedPlayer.y+vy*140,elapsed);
+  }
  }
- followCamera(targetX,targetY,elapsed);shake*=Math.pow(.88,elapsed/16);
+ shake*=Math.pow(.88,elapsed/16);
  if(!document.hidden&&(!activeModal||!sceneryCache.valid))draw();
  if(activeModal==='mapModal'&&mapView.dirty)drawAtlas();
  hudClock+=elapsed;
  if(!activeModal&&hudClock>=100){hudClock=0;updateHUD();}
- if(!activeModal&&!document.hidden){
+ if(running){
   drawMini(elapsed);
   queueChunkPreparation(frameStart);
  }
  requestAnimationFrame(loop);
 }
-if(progress.position)Object.assign(player,progress.position);snapshotBody(player);safePosition={x:player.x,y:player.y,angle:player.angle};snapCamera(player.x,player.y);interpolatePlayer();
-applyBuild();if(progress.mode==='train'){if(!railRestore(progress.railPosition,progress.previousRailPosition)){const p=railEnter();if(p)Object.assign(player,p);}snapshotBody(player);snapCamera(player.x,player.y);interpolatePlayer();}streamWorld(true);resize();if(progress.mode!=='train'&&!powerActive('phase')&&!clearSpot(player))recover();rebuildDynamic();updateHUD();updatePoliceHUD();drawMini();requestAnimationFrame(loop);
+if(progress.position)Object.assign(player,progress.position);snapshotPlayer();safePosition={x:player.x,y:player.y,angle:player.angle};snapCamera(player.x,player.y);interpolatePlayer();
+applyBuild();if(progress.mode==='train'){if(!railRestore(progress.railPosition,progress.previousRailPosition)){const p=railEnter();if(p)Object.assign(player,p);}snapshotPlayer();snapCamera(player.x,player.y);interpolatePlayer();}streamWorld(true);resize();if(progress.mode!=='train'&&!powerActive('phase')&&!clearSpot(player))recover();rebuildDynamic();updateHUD();updatePoliceHUD();drawMini();requestAnimationFrame(loop);
 // Opt-in local diagnostics; not enabled during normal play.
 if(new URLSearchParams(location.search).has('test'))window.cityTest={railway,sceneryCache,railTrackOpacity,railPaintVehicle,railDrawTrainLights,railNode,railGeometry,railStation,railPiecesIn,railSample,railPlan,railPath,railEnsure,railMakeTrain,railNearest,railEnter,railCreateOffer,railCleanJob,railUpdateJob,railUpdateNavigation,railSpawnNPC,railCarriages,railAtStop,railRestore,railRefreshWorld,railFindStation,railSetDestination,railReservationsForArea,railReserved,railIntervals,railClearance,railReserveTrains,railUpdatePlayer,railUpdateNPC,railJobDistance,railPoint,railNext,railLength,railOnBridge,railSetManualTurn,railApplyManualTurn,railUpcomingJunction,railTravelDirection,railChoicePort,railJunctionHint,railDrawUpperLayer,trafficJunctions,updateTrafficJunctions,refreshTrafficJunctions,trafficRearLimit,GAME_MODES,MODE_ORDER,JOB_MODES,service,jobNavigation:routeNavigation,modeVehicle,setGameMode,cycleGameMode,currentJob,currentOffer,jobTarget,createJobOffer,ensureJobOffer,acceptJob,changeJobOffer,JOB_BANDS,JOB_ROUTE_COLOR,jobLengthKm,jobLegKm,updateJob,finishJobStop,cityJobType,findJobSite,streetSite,nearbyRoadStops,cleanJob,updateModeHUD,renderModeMenu,showJobMap,OLD_TOWNS,AIRPORTS,AIRCRAFT,oldTownStyle,airportKind,dressBuilding,drawBuilding,drawAircraft,SPEED_KMH,speedKmh,VEHICLE_TYPES,TRAFFIC_MIX,highwayRoute,refillTraffic,routeAt,projectRoute,updateTraffic,senseTraffic,MAX_POLICE,POLICE_ROLES,POWER_TYPES,powers,pickups,pickupState,powerActive,ghosting,activatePower,tickPowers,finishGhostExit,spawnPickup,updatePickups,ignoresCollision,maintainPursuit,spawnPoliceUnit,policeTarget,nearDrivingView,protectVisibleVehicle,regionType,featureAt,getScene,sceneCache,activeScenes,navigation,gridEdge,nearestDriveRoad,navigationPath,surfaceAt,findLandscape,exploration,roadAnchors,CATEGORIES,GARAGE_CATEGORIES,GARAGE_VEHICLES,garageKindForMode,garageState,UPGRADES,appearance,tryOn,paintVehicle,generateBlock,worldHash,worldWindow,chunks,previewChunks,roadCoord,roadHalf,roadIndex,streamWorld,insideLoaded,obstacles,staticHash,dynamicHash,mapView,police,policeState,setPoliceEnabled,deployPolice,planPolice,segmentClear,updatePolice,updatePlayer,progress,turbo,stats,earnDistance,purchase,balanceMm,saveProgress,renderGarage,applyBuild,SAVE_KEY,player,traffic,parked,buildings,boundaries,blocks,keys,xs,ys,contact,physics,recover,clearSpot,closestRoad,onGrass,start,openModal,closeModal,rebuildDynamic,updateHUD,draw,drawAtlas,clearKeys,get state(){return {started,activeModal,simTime,distance,camera:{...camera},world:{infinite:true,loaded:chunks.size,preview:previewChunks.size,generated:worldWindow.generated,center:{i:worldWindow.i,j:worldWindow.j},radius:worldWindow.radius},counts:{blocks:blocks.length,buildings:buildings.length,traffic:traffic.length,parked:parked.length}};}};
 })();
