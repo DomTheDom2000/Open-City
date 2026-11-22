@@ -307,8 +307,8 @@ function roadIndex(v,axis){let i=Math.floor((v-240)/SPACING);while(v<roadCoord(i
 const xs=[],ys=[],blocks=[],buildings=[],obstacles=[],trees=[],parked=[],traffic=[],skids=[],particles=[],explosions=[],boundaries=[];
 let vehicleRemovalPending=false;
 const chunks=new Map(),previewChunks=new Map(),preparedChunks=new Map(),preparedScenes=new Map();
-let pendingChunks=[],chunkPreparationQueued=false;
-const worldWindow={i:NaN,j:NaN,radius:3,generation:0,maxLoaded:0,generated:0};
+let pendingChunks=[],chunkPreparationQueued=false,worldPreparation=null;
+const worldWindow={i:NaN,j:NaN,radius:3,bounds:{},generation:0,maxLoaded:0,generated:0};
 const streetRoots=['Juniper','Cedar','Linden','Mercer','Willow','Orchard','Palm','Union','Atlantic','Foundry','Mason','Elm','King','Prospect','Beacon','Alder','Birch','Harbour','Market','Vine'];
 function streetName(i,axis){if(isHighway(i))return axis?'East–west Expressway':'North–south Expressway';const root=streetRoots[Math.floor(worldHash(i,axis,31)*streetRoots.length)];return root+(roadHalf(i,axis)>70?' Boulevard':axis?' Avenue':' Street');}
 const palette={old:['#ad7765','#ba8c70','#9b6c5d','#c2977a'],garden:['#9aab96','#b3b6a0','#b8aa89','#8eaaa2'],down:['#8a9d9b','#778c8d','#a9b5ac','#adad99'],arts:['#b09d89','#ba8876','#92a59d','#b5ac8f'],harbor:['#849b98','#b0b4a7','#8a9691','#a79883'],industrial:['#8b9991','#a59480','#b1afa0'],campus:['#baa98b','#93a39b','#b8b7a1'],suburb:['#b7b5a0','#a6b6a0','#c3a589','#9ea69a']};
@@ -848,7 +848,7 @@ function generateBlockParcel(i,j,feature){
 }
 // Large districts replace a three-by-three patch of the street grid.
 const sceneCache=new Map(),activeScenes=new Map(),navigation={nodes:[],nodeIds:new Map(),roads:[],segments:[],streetCorners:[],version:0};
-const streetlamps=[];
+let streetlamps=[];
 const reserveSectors=new Map(),streetSectorPlans=new Map();
 const GIANT_RESERVE_SPACING=8;
 const DENSE_FOREST_ROAD_WIDTH=52;
@@ -2336,48 +2336,54 @@ function gridRoad(axis,index,span){
  }
  return road;
 }
-function buildNavigation(){
- navigation.nodes.length=navigation.roads.length=navigation.segments.length=navigation.streetCorners.length=0;
- const ids=new Map(),r=worldWindow.radius,ci=worldWindow.i,cj=worldWindow.j;navigation.nodeIds=ids;
- const node=p=>{const key=p.x.toFixed(3)+','+p.y.toFixed(3);if(ids.has(key))return ids.get(key);const id=navigation.nodes.length;navigation.nodes.push({x:p.x,y:p.y,id,edges:[]});ids.set(key,id);return id;};
+function* buildNavigation(area,worldChunks,scenes){
+ const {i:ci,j:cj,radius:r}=area,ids=new Map();
+ const graph={nodes:[],nodeIds:ids,roads:[],segments:[],streetCorners:[]};
+ const node=p=>{const key=p.x.toFixed(3)+','+p.y.toFixed(3);if(ids.has(key))return ids.get(key);const id=graph.nodes.length;graph.nodes.push({x:p.x,y:p.y,id,edges:[]});ids.set(key,id);return id;};
  const addRoad=road=>{
-  navigation.roads.push(road);
+  graph.roads.push(road);
   for(const seg of road.segments){
-   navigation.segments.push(seg);
-   if(!insideLoaded(seg.a.x,seg.a.y,-1)||!insideLoaded(seg.b.x,seg.b.y,-1))continue;
+   graph.segments.push(seg);
+   if(!insideLoaded(seg.a.x,seg.a.y,-1,area)||!insideLoaded(seg.b.x,seg.b.y,-1,area))continue;
    const a=node(seg.a),b=node(seg.b),distance=Math.hypot(seg.a.x-seg.b.x,seg.a.y-seg.b.y);
    if(a===b)continue;
-   navigation.nodes[a].edges.push({to:b,cost:distance,width:road.width,kind:road.kind,dockTransfer:road.dockTransfer});
-   if(!seg.oneWay)navigation.nodes[b].edges.push({to:a,cost:distance,width:road.width,kind:road.kind,dockTransfer:road.dockTransfer});
+   graph.nodes[a].edges.push({to:b,cost:distance,width:road.width,kind:road.kind,dockTransfer:road.dockTransfer});
+   if(!seg.oneWay)graph.nodes[b].edges.push({to:a,cost:distance,width:road.width,kind:road.kind,dockTransfer:road.dockTransfer});
   }
  };
  for(const axis of [0,1]){
   const center=axis===0?ci:cj,across=axis===0?cj:ci;
-  for(let i=center-r;i<=center+r+1;i++)for(let j=across-r;j<=across+r;j++){
-   if(!gridEdge(axis,i,j))continue;
-   const road=gridRoad(axis,i,j);
-   // Leave space for the crossing carriageway, or a narrower scenic entrance.
-   const inset=n=>gridEdge(1-axis,n,i-1)||gridEdge(1-axis,n,i)?roadHalf(n,1-axis)+4:36;
-   road.entryInset=inset(j);road.exitInset=inset(j+1);
-   addRoad(road);
+  for(let i=center-r;i<=center+r+1;i++){
+   for(let j=across-r;j<=across+r;j++){
+    if(!gridEdge(axis,i,j))continue;
+    const road=gridRoad(axis,i,j);
+    // Leave space for the crossing carriageway, or a narrower scenic entrance.
+    const inset=n=>gridEdge(1-axis,n,i-1)||gridEdge(1-axis,n,i)?roadHalf(n,1-axis)+4:36;
+    road.entryInset=inset(j);road.exitInset=inset(j+1);
+    addRoad(road);
+   }
+   yield;
   }
  }
- // Curbs and crosswalks depend on the road graph. Reuse them when the scenery buffer moves.
- for(const node of navigation.nodes){
+ // Scenic roads are added after identifying corners in the grid streets.
+ for(const node of graph.nodes){
   if(node.edges.length!==2&&node.edges.length!==4)continue;
   const {x,y}=node,i=roadIndex(x,0),j=roadIndex(y,1);
   if(isHighway(i)||isHighway(j))continue;
-  if(node.edges.length===4){navigation.streetCorners.push({x,y,rx:roadHalf(i,0),ry:roadHalf(j,1)});continue;}
+  if(node.edges.length===4){graph.streetCorners.push({x,y,rx:roadHalf(i,0),ry:roadHalf(j,1)});continue;}
   const bend=districtStreetBend(i,j,gridEdge(1,j,i),gridEdge(1,j,i-1),gridEdge(0,i,j),gridEdge(0,i,j-1));
-  if(bend)navigation.streetCorners.push(bend);
+  if(bend)graph.streetCorners.push(bend);
  }
- for(const s of activeScenes.values())for(const road of s.roads)addRoad(road);
- rebuildStreetlamps();
- navigation.version++;for(const c of police)c.planTimer=Math.min(c.planTimer,30+c.unit*35);
+ yield;
+ for(const scene of scenes.values()){
+  for(const road of scene.roads)addRoad(road);
+  yield;
+ }
+ return {graph,lamps:buildStreetlamps(graph.segments,worldChunks)};
 }
-function rebuildStreetlamps(){
- streetlamps.length=0;
- for(const seg of navigation.segments){
+function buildStreetlamps(segments,worldChunks){
+ const lamps=[];
+ for(const seg of segments){
   const highway=seg.kind==='highway';
   if(!highway&&seg.kind!=='street')continue;
   const horizontal=seg.a.y===seg.b.y,mx=(seg.a.x+seg.b.x)/2,my=(seg.a.y+seg.b.y)/2;
@@ -2386,7 +2392,7 @@ function rebuildStreetlamps(){
    // Use the median, with one light every other block and alternating arms.
    const span=horizontal?i:j;if(mod(span,2))continue;
    const side=mod(span,4)===0?1:-1,nx=horizontal?0:side,ny=horizontal?side:0;
-   streetlamps.push({x:mx,y:my,bx:mx+nx*7,by:my+ny*7,angle:Math.atan2(ny,nx),radius:150});
+   lamps.push({x:mx,y:my,bx:mx+nx*7,by:my+ny*7,angle:Math.atan2(ny,nx),radius:150});
    continue;
   }
   const block=i+j,curb=seg.width/2+7;
@@ -2395,12 +2401,13 @@ function rebuildStreetlamps(){
   for(const side of [preferred,-preferred]){
    const nx=horizontal?0:side,ny=horizontal?side:0;
    const x=mx+nx*curb,y=my+ny*curb;
-   const sidewalk=chunks.get(roadIndex(x,0)+','+roadIndex(y,1));
+   const sidewalk=worldChunks.get(roadIndex(x,0)+','+roadIndex(y,1));
    if(!sidewalk||sidewalk.scene||sidewalk.stationLot||sidewalk.trees.some(t=>(x-t.x)**2+(y-t.y)**2<(t.r+5)**2))continue;
-   streetlamps.push({x,y,bx:x-nx*10,by:y-ny*10,angle:Math.atan2(-ny,-nx),radius:seg.width>=150?100:82});
+   lamps.push({x,y,bx:x-nx*10,by:y-ny*10,angle:Math.atan2(-ny,-nx),radius:seg.width>=150?100:82});
    break;
   }
  }
+ return lamps;
 }
 function nearestDriveRoad(x,y){let best=null;for(const seg of navigation.segments){const p=projectSegment(x,y,seg.a,seg.b);if(!best||p.distance<best.distance)best={...p,seg};}return best;}
 function surfaceAt(x,y){
@@ -2424,8 +2431,11 @@ function surfaceAt(x,y){
  return b&&b.park&&x>b.x+12&&x<b.x+b.w-12&&y>b.y+12&&y<b.y+b.h-12&&Math.abs(x-b.x-b.w/2)>10&&Math.abs(y-b.y-b.h/2)>10?'grass':'road';
 }
 
-function previewBlock(i,j){const key=i+','+j;if(chunks.has(key))return chunks.get(key);if(previewChunks.has(key))return previewChunks.get(key);const b=generateBlock(i,j);previewChunks.set(key,b);if(previewChunks.size>180)previewChunks.delete(previewChunks.keys().next().value);return b;}
-function insideLoaded(x,y,margin=0){return x>roadCoord(worldWindow.i-worldWindow.radius,0)+margin&&x<roadCoord(worldWindow.i+worldWindow.radius+1,0)-margin&&y>roadCoord(worldWindow.j-worldWindow.radius,1)+margin&&y<roadCoord(worldWindow.j+worldWindow.radius+1,1)-margin;}
+function previewBlock(i,j){const key=i+','+j;if(chunks.has(key))return chunks.get(key);if(preparedChunks.has(key))return preparedChunks.get(key);if(previewChunks.has(key))return previewChunks.get(key);const b=generateBlock(i,j);previewChunks.set(key,b);if(previewChunks.size>180)previewChunks.delete(previewChunks.keys().next().value);return b;}
+function insideLoaded(x,y,margin=0,area=worldWindow){
+ const {l,t,r,b}=area.bounds;
+ return x>l+margin&&x<r-margin&&y>t+margin&&y<b-margin;
+}
 function nearDrivingView(x,y,margin=200){
  const hw=viewW/(2*zoom)+margin,hh=viewH/(2*zoom)+margin;
  const near=(cx,cy)=>Math.abs(x-cx)<=hw&&Math.abs(y-cy)<=hh;
@@ -2963,64 +2973,142 @@ function prepareNextChunk(){
   const cost=Math.max(costX,costY)+.01*(Math.abs(tile.x-nextX)+Math.abs(tile.y-nextY));
   if(cost<best){nearest=n;best=cost;}
  }
- const [tile]=pendingChunks.splice(nearest,1),block=generateBlock(tile.x,tile.y);
- preparedChunks.set(tile.key,block);
+ const [tile]=pendingChunks.splice(nearest,1);
+ prepareChunk(tile.x,tile.y,tile.key);
+}
+function prepareChunk(i,j,key){
+ const block=preparedChunks.get(key)||generateBlock(i,j);
+ preparedChunks.set(key,block);
  if(block.scene)preparedScenes.set(block.scene.key,block.scene);
+ return block;
 }
 function queueChunkPreparation(frameStart){
  if(chunkPreparationQueued)return;
- const next=nextSceneryLayer();
- if(!next&&!pendingChunks.length)return;
- if(typeof requestIdleCallback!=='function'){
-  if(performance.now()-frameStart<3){
-   if(next)sceneryImage(next.tile,next.layer);
-   else prepareNextChunk();
+ const preparing=worldPreparation&&!worldPreparation.snapshot;
+ if(!preparing&&!pendingChunks.length&&!nextSceneryLayer())return;
+ const prepare=(remaining,force=false)=>{
+  // Keep idle work short so it leaves room for input and the next paint.
+  const stopAt=performance.now()+3;
+  while(worldPreparation&&!worldPreparation.snapshot){
+   if(!force&&(remaining()<1.5||performance.now()>=stopAt))return;
+   const step=worldPreparation.steps.next();
+   if(step.done)worldPreparation.snapshot=step.value;
+   force=false;
   }
+  for(let n=0;n<3&&(force||remaining()>=1.5&&performance.now()<stopAt);n++){
+   const next=nextSceneryLayer();
+   if(next)sceneryImage(next.tile,next.layer);
+   else if(pendingChunks.length)prepareNextChunk();
+   else break;
+   force=false;
+  }
+ };
+ if(typeof requestIdleCallback!=='function'){
+  prepare(()=>7-(performance.now()-frameStart),preparing);
   return;
  }
  chunkPreparationQueued=true;
  requestIdleCallback(deadline=>{
   chunkPreparationQueued=false;
   if(activeModal||document.hidden)return;
-  // Prepare individual layers ahead of the camera within the idle budget.
-  for(let n=0;n<3&&(deadline.timeRemaining()>1.5||n===0&&deadline.didTimeout);n++){
-   const next=nextSceneryLayer();
-   if(next)sceneryImage(next.tile,next.layer);
-   else if(pendingChunks.length)prepareNextChunk();
-   else break;
-  }
+  prepare(()=>deadline.timeRemaining(),deadline.didTimeout);
  },{timeout:65});
 }
-function streamWorld(force=false){
- const radius=Math.max(3,Math.ceil(Math.max(viewW,viewH)/(2*zoom*SPACING))+2);
- // Grid boundaries run down the middle of the road. Keep the loaded window
- // steady during lane changes, independently on each axis.
- const i=!force&&player.x>=worldWindow.left&&player.x<=worldWindow.right?worldWindow.i:roadIndex(player.x,0);
- const j=!force&&player.y>=worldWindow.top&&player.y<=worldWindow.bottom?worldWindow.j:roadIndex(player.y,1);
- if(!force&&worldWindow.i===i&&worldWindow.j===j&&worldWindow.radius===radius)return false;
- const initial=!Number.isFinite(worldWindow.i);
- Object.assign(worldWindow,{i,j,radius,left:roadCoord(i,0)-roadHalf(i,0),right:roadCoord(i+1,0)+roadHalf(i+1,0),top:roadCoord(j,1)-roadHalf(j,1),bottom:roadCoord(j+1,1)+roadHalf(j+1,1)});
- for(const [key,b]of chunks)if(Math.abs(b.i-i)>radius||Math.abs(b.j-j)>radius)chunks.delete(key);
+function finishPreparation(steps){
+ let step=steps.next();
+ while(!step.done)step=steps.next();
+ return step.value;
+}
+function* prepareWorld(i,j,radius){
+ const columns=[],rows=[];
+ for(let n=i-radius;n<=i+radius+1;n++)columns.push(roadCoord(n,0));
+ for(let n=j-radius;n<=j+radius+1;n++)rows.push(roadCoord(n,1));
+ const bounds={l:columns[0],t:rows[0],r:columns.at(-1),b:rows.at(-1)};
+ const area={i,j,radius,bounds,left:columns[radius]-roadHalf(i,0),right:columns[radius+1]+roadHalf(i+1,0),
+  top:rows[radius]-roadHalf(j,1),bottom:rows[radius+1]+roadHalf(j+1,1)};
+ const nextChunks=new Map(),scenes=new Map(),roofs=[],solids=[],foliage=[],hash=new SpatialHash();
+ for(const [key,block] of chunks){
+  if(Math.abs(block.i-i)<=radius&&Math.abs(block.j-j)<=radius)nextChunks.set(key,block);
+ }
+ let added=0;
  for(let cy=j-radius;cy<=j+radius;cy++)for(let cx=i-radius;cx<=i+radius;cx++){
   const key=cx+','+cy;
-  if(chunks.has(key))continue;
-  const block=preparedChunks.get(key)||generateBlock(cx,cy);
-  chunks.set(key,block);preparedChunks.delete(key);worldWindow.generated++;
+  if(nextChunks.has(key))continue;
+  nextChunks.set(key,prepareChunk(cx,cy,key));
+  added++;
+  yield;
  }
- resetPendingChunks();
- blocks.length=buildings.length=obstacles.length=trees.length=parked.length=xs.length=ys.length=0;
- activeScenes.clear();for(const b of chunks.values()){if(b.scene)activeScenes.set(b.scene.key,b.scene);blocks.push(b);buildings.push(...b.buildings);obstacles.push(...b.obstacles);trees.push(...b.trees);parked.push(...b.parked);}
- for(let n=i-radius;n<=i+radius+1;n++)xs.push(roadCoord(n,0));for(let n=j-radius;n<=j+radius+1;n++)ys.push(roadCoord(n,1));
- staticHash.reset();for(const b of buildings)staticHash.insert(b);for(const b of obstacles)staticHash.insert(b);
- // A long route can begin several areas away while its car is still beside us.
- // Retire cars by their current position, and only safely beyond the camera.
- dynamicHash.reset();const trafficView=trafficViewport(TRAFFIC_RETIRE_MARGIN);
+ for(const block of nextChunks.values()){
+  if(block.scene)scenes.set(block.scene.key,block.scene);
+  roofs.push(...block.buildings);solids.push(...block.obstacles);foliage.push(...block.trees);
+  yield;
+ }
+ // Preserve collision ordering by indexing buildings before other obstacles.
+ for(const bodies of [roofs,solids])for(let n=0;n<bodies.length;n++){
+  hash.insert(bodies[n]);
+  if(n%64===63)yield;
+ }
+ const roads=yield* buildNavigation(area,nextChunks,scenes);
+ const rail=yield* prepareLocalRail(bounds);
+ return {area,nextChunks,scenes,roofs,solids,foliage,columns,rows,hash,added,roads,rail};
+}
+function applyWorld(snapshot,initial,refill){
+ const {area,nextChunks,scenes,roofs,solids,foliage,columns,rows,hash,added,roads,rail}=snapshot;
+ Object.assign(worldWindow,area);
+ chunks.clear();activeScenes.clear();
+ for(const [key,block] of nextChunks){chunks.set(key,block);preparedChunks.delete(key);}
+ for(const [key,scene] of scenes)activeScenes.set(key,scene);
+ for(const [target,source] of [[blocks,chunks.values()],[buildings,roofs],[obstacles,solids],[trees,foliage],[xs,columns],[ys,rows]]){
+  target.length=0;
+  for(const item of source)target.push(item);
+ }
+ // Parked cars can be moved or destroyed while preparation is in progress.
+ parked.length=0;for(const block of blocks)parked.push(...block.parked);
+ Object.assign(staticHash,hash);
+ Object.assign(navigation,roads.graph);streetlamps=roads.lamps;
+ navigation.version++;for(const c of police)c.planTimer=Math.min(c.planTimer,30+c.unit*35);
+ railRefreshWorld(rail);
+ // Retire cars by position, only beyond the camera. Routine traffic refills
+ // already run on their own timer in maintainTraffic.
+ const trafficView=trafficViewport(TRAFFIC_RETIRE_MARGIN);
  for(let n=traffic.length-1;n>=0;n--){
   const c=traffic[n];if(!c.tractorReserve&&!insideLoaded(c.x,c.y,150)&&!protectRoadTraffic(c,trafficView))traffic.splice(n,1);
  }
- buildNavigation();railRefreshWorld();refillTraffic(initial);worldWindow.generation++;worldWindow.maxLoaded=Math.max(worldWindow.maxLoaded,chunks.size);
-
- rebuildDynamic();return true;
+ if(refill)refillTraffic(initial);
+ dynamicHash.reset();rebuildDynamic();
+ worldWindow.generation++;worldWindow.generated+=added;worldWindow.maxLoaded=Math.max(worldWindow.maxLoaded,chunks.size);
+ worldPreparation=null;resetPendingChunks();
+}
+function worldCenter(x,y,force=false){
+ // Keep the window steady through lane changes on either axis.
+ const {i,j,left,right,top,bottom}=worldWindow;
+ return {i:!force&&x>=left&&x<=right?i:roadIndex(x,0),j:!force&&y>=top&&y<=bottom?j:roadIndex(y,1)};
+}
+function requestWorld(i,j,radius){
+ const work=worldPreparation;
+ if(work&&work.i===i&&work.j===j&&work.radius===radius)return work;
+ return worldPreparation={i,j,radius,steps:prepareWorld(i,j,radius),snapshot:null};
+}
+function streamWorld(force=false,defer=false){
+ const radius=Math.max(3,Math.ceil(Math.max(viewW,viewH)/(2*zoom*SPACING))+2);
+ const {i,j}=worldCenter(player.x,player.y,force);
+ const dx=i-worldWindow.i,dy=j-worldWindow.j;
+ if(!force&&dx===0&&dy===0&&worldWindow.radius===radius){
+  if(defer){
+   const ahead=worldCenter(player.x+player.vx*450,player.y+player.vy*450);
+   const nextI=clamp(ahead.i,i-1,i+1),nextJ=clamp(ahead.j,j-1,j+1);
+   if(nextI!==i||nextJ!==j)requestWorld(nextI,nextJ,radius);
+  }
+  return false;
+ }
+ const initial=!Number.isFinite(worldWindow.i);
+ const immediate=force||!defer||initial||Math.abs(dx)>1||Math.abs(dy)>1;
+ const work=requestWorld(i,j,radius);
+ // Keep the old window active until the terrain, collision and navigation data agree.
+ const snapshot=work.snapshot||(immediate?finishPreparation(work.steps):null);
+ if(!snapshot)return false;
+ applyWorld(snapshot,initial,immediate);
+ return true;
 }
 
 let queryStamp=0,physicsTick=0,collisionPass=0;
@@ -3369,7 +3457,8 @@ function railStation(i,j){
  const s={id,edge:piece.id,d:piece.stationD,i,j,x:p.x,y:p.y,angle:p.angle,lot,name:railStationName(lot),type,freight,elevated:true,roof:style?.roofs[0]||(freight?'#889b97':type==='offroad'?'#6e8a6e':'#739e91'),site:id,action:'rail-stop'};
  railway.stations.set(id,s);if(railway.stations.size>400)railway.stations.delete(railway.stations.keys().next().value);return s;
 }
-function railPiecesIn(l,t,r,b,junctions=true){
+function railPiecesIn(l,t,r,b,junctions=true){return finishPreparation(prepareRailPieces(l,t,r,b,junctions));}
+function* prepareRailPieces(l,t,r,b,junctions=true){
  const i0=Math.floor(roadIndex(l,0)/6)-1,i1=Math.floor(roadIndex(r,0)/6)+1,j0=Math.floor(roadIndex(t,1)/6)-1,j1=Math.floor(roadIndex(b,1)/6)+1,out=[];
  const add=id=>{const p=railGeometry(id);if(p.r>=l&&p.l<=r&&p.b>=t&&p.t<=b)out.push(p);};
  const pad=55;
@@ -3378,8 +3467,8 @@ function railPiecesIn(l,t,r,b,junctions=true){
   if(x-pad<=r&&y-pad<=b){
    // An edge stays in the first half of its cell across the direction of travel.
    // Skip distant geometry before laying out stations or sampling curves.
-   if(roadCoord(i*6+8,0)+pad>=l&&roadCoord(j*6+3,1)+pad>=t)add(railEdgeId(i,j,0));
-   if(roadCoord(i*6+3,0)+pad>=l&&roadCoord(j*6+8,1)+pad>=t)add(railEdgeId(i,j,1));
+   if(roadCoord(i*6+8,0)+pad>=l&&roadCoord(j*6+3,1)+pad>=t){add(railEdgeId(i,j,0));yield;}
+   if(roadCoord(i*6+3,0)+pad>=l&&roadCoord(j*6+8,1)+pad>=t){add(railEdgeId(i,j,1));yield;}
   }
   if(junctions){
    const n=railNode(i,j),reach=RAIL_BEND+pad;
@@ -3390,11 +3479,13 @@ function railPiecesIn(l,t,r,b,junctions=true){
 }
 // Diagnostics can compare the layers without feeding rail geometry into ground generation.
 function railReservationsForArea(l,t,r,b){return {pieces:railPiecesIn(l-70,t-70,r+70,b+70),stations:railStationsIn(l-240,t-110,r+240,b+110)};}
-function railStationsIn(l,t,r,b){
+function railStationsIn(l,t,r,b){return finishPreparation(prepareRailStations(l,t,r,b));}
+function* prepareRailStations(l,t,r,b){
  const out=[],i0=Math.floor(roadIndex(l,0)/6)-1,i1=Math.floor(roadIndex(r,0)/6)+1,j0=Math.floor(roadIndex(t,1)/6)-1,j1=Math.floor(roadIndex(b,1)/6)+1;
  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
   if(roadCoord(i*6+3,0)>r||roadCoord(i*6+6,0)<l||roadCoord(j*6,1)>b||roadCoord(j*6+3,1)<t)continue;
   const s=railStation(i,j);if(s.x>=l&&s.x<=r&&s.y>=t&&s.y<=b)out.push(s);
+  yield;
  }
  return out;
 }
@@ -3407,9 +3498,13 @@ function railReserved(box,reservation,pad=10){
  }
  return false;
 }
-function railRefreshWorld(){
- const r=worldWindow.radius,l=roadCoord(worldWindow.i-r,0),t=roadCoord(worldWindow.j-r,1),right=roadCoord(worldWindow.i+r+1,0),bottom=roadCoord(worldWindow.j+r+1,1);
- railway.local=railPiecesIn(l,t,right,bottom);railway.localStations=railStationsIn(l-250,t-120,right+250,bottom+120);
+function* prepareLocalRail({l,t,r,b}){
+ const pieces=yield* prepareRailPieces(l,t,r,b);
+ const stations=yield* prepareRailStations(l-250,t-120,r+250,b+120);
+ return {pieces,stations};
+}
+function railRefreshWorld({pieces,stations}=finishPreparation(prepareLocalRail(worldWindow.bounds))){
+ railway.local=pieces;railway.localStations=stations;
  // Every railway piece, including turnouts and stations, belongs to the
  // elevated layer. Its extent never depends on the terrain underneath it.
  railway.bridges=railway.local.map(piece=>({piece,a:0,b:piece.length,track:piece}));
@@ -7528,7 +7623,7 @@ function physics(dt){
   if(dayCycleMs>=DAY_CYCLE_MS)dayCycleMs-=DAY_CYCLE_MS;
   if((previousPhase==='night')!==(dayPhase()==='night'))refreshTrafficForDayPhase();
  }
- streamWorld();maintainTraffic(dt);if(started){tickPowers(dt);maintainPursuit(dt);}
+ streamWorld(false,true);maintainTraffic(dt);if(started){tickPowers(dt);maintainPursuit(dt);}
  physicsTick++;activeBodies.length=0;
  for(const c of traffic){snapshotBody(c);c.activeTick=physicsTick;activeBodies.push(c);}
  for(const c of police){snapshotBody(c);c.activeTick=physicsTick;activeBodies.push(c);}
