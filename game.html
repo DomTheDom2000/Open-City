@@ -155,7 +155,10 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
 .admin-switches span::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#baccb8}
 .admin-switches button[aria-checked="true"] span{border-color:#d4ed89;background:#d4ed89}
 .admin-switches button[aria-checked="true"] span::after{left:18px;background:#213d30}
-.admin-volume{display:grid;grid-template-columns:auto minmax(0,1fr) 4ch;align-items:center;gap:12px;min-height:46px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#1d3b31;color:var(--ink);font-size:14px;font-weight:700}
+.admin-volume,.admin-music-track{display:grid;align-items:center;gap:12px;min-height:46px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#1d3b31;color:var(--ink);font-size:14px;font-weight:700}
+.admin-volume{grid-template-columns:auto minmax(0,1fr) 4ch}
+.admin-music-track{grid-template-columns:minmax(0,1fr) auto}
+.admin-music-track strong{color:var(--green);font-size:12px}
 .admin-volume input{width:100%;min-width:0;min-height:28px;margin:0;accent-color:var(--green);cursor:pointer}
 .admin-volume input:focus-visible{outline:2px solid #e8f7ab;outline-offset:3px}
 .admin-volume output{text-align:right;color:var(--green);font-size:12px;font-variant-numeric:tabular-nums}
@@ -196,6 +199,10 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
     <label for="musicVolume">Music volume</label>
     <input id="musicVolume" type="range" min="0" max="100" step="1" value="45" aria-valuetext="45%">
     <output id="musicVolumeValue" for="musicVolume" aria-hidden="true">45%</output>
+   </div>
+   <div class="admin-music-track" role="status">
+    <div>Currently playing</div>
+    <strong id="adminMusicTrack">None</strong>
    </div>
   </div>
  </section>
@@ -6136,6 +6143,8 @@ $('musicVolume').addEventListener('change',saveProgress);
 function renderAdminPanel(){
  const settings=progress.admin;
  renderMusicVolume();
+ const audio=[musicAudio,fadingMusicAudio].find(track=>track?.played.length&&!track.ended&&!track.error);
+ $('adminMusicTrack').textContent=audio?audio.src.split('/').pop().replace(/\.m4a$/i,''):'None';
  for(const button of $('adminModal').querySelectorAll('[data-admin-time]'))button.setAttribute('aria-pressed',String(settings.time===button.dataset.adminTime));
  for(const button of $('adminModal').querySelectorAll('[data-admin-toggle]'))button.setAttribute('aria-checked',String(settings[button.dataset.adminToggle]));
 }
@@ -6178,7 +6187,7 @@ $('adminModal').addEventListener('click',event=>{
    }
   }
  }
- renderAdminPanel();syncMusic();saveProgress();updateHUD();draw();drawMini();
+ syncMusic();renderAdminPanel();saveProgress();updateHUD();draw();drawMini();
 });
 function closeModal(){
  if(!activeModal)return;
