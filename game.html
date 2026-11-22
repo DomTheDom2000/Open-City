@@ -269,7 +269,7 @@ const DAY_PHASES={
  sunrise:{label:'Sunrise',end:DAY_CYCLE_MS}
 };
 const DAY_TRAFFIC_LIMIT=48,NIGHT_TRAFFIC_LIMIT=24;
-let dayCycleMs=0,dayCycleIndex=0;
+let dayCycleMs=0;
 const MINIMAP_SPAN=1900,MINIMAP_LOOK_AHEAD=480,MINIMAP_CACHE_PAD=64;
 const minimapView={offsetX:0,offsetY:0,terrain:document.createElement('canvas'),cachedRegion:null};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -6004,7 +6004,15 @@ function drawRouteDestination(){
 
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2800);}
 function clearKeys(){resetGamepadDrive();turbo.active=false;for(const k of Object.keys(keys))delete keys[k];document.querySelectorAll('.held').forEach(b=>b.classList.remove('held'));}
-const MUSIC_TRACKS={day:['Day_1.m4a','Day_2.m4a'],night:['Night.m4a']};
+const MUSIC_TRACKS={
+ day:['Day_1.m4a','Day_2.m4a','Day_3.m4a','Day_4.m4a','Day_5.m4a','Day_6.m4a','Day_7.m4a'],
+ night:['Night_1.m4a','Night_2.m4a','Night_3.m4a','Night_4.m4a','Night_5.m4a']
+};
+const MUSIC_HISTORY_KEY='open-city.last-music-track.';
+const lastMusicTrack={};
+try{
+ for(const phase of Object.keys(MUSIC_TRACKS))lastMusicTrack[phase]=localStorage.getItem(MUSIC_HISTORY_KEY+phase);
+}catch{}
 const MUSIC_CROSSFADE_MS=2000;
 let musicAudio=null,fadingMusicAudio=null,musicFadeMs=MUSIC_CROSSFADE_MS;
 let musicPhase=null,musicFarm=null,musicOverride=null,musicAutoplayBlocked=false;
@@ -6074,8 +6082,15 @@ function syncMusic(phase=dayPhase(),farm=hempFarmAtPlayer()){
  }
  if(musicOverride==='waiting')return;
  if(tracks&&!musicAudio){
-  musicAudio=new Audio();
-  musicAudio.src=tracks[dayCycleIndex%tracks.length];
+  const choices=tracks.filter(track=>track!==lastMusicTrack[phase]);
+  const track=choices[Math.floor(Math.random()*choices.length)];
+  const audio=new Audio();
+  musicAudio=audio;
+  audio.addEventListener('playing',()=>{
+   lastMusicTrack[phase]=track;
+   try{localStorage.setItem(MUSIC_HISTORY_KEY+phase,track);}catch{}
+  },{once:true});
+  audio.src=track;
   applyMusicVolume();
  }
  const audio=musicAudio;
@@ -7501,7 +7516,7 @@ function physics(dt){
  if(started&&progress.admin.time==='cycle'){
   const previousPhase=dayPhase();
   dayCycleMs+=dt;
-  if(dayCycleMs>=DAY_CYCLE_MS){dayCycleMs-=DAY_CYCLE_MS;dayCycleIndex++;}
+  if(dayCycleMs>=DAY_CYCLE_MS)dayCycleMs-=DAY_CYCLE_MS;
   if((previousPhase==='night')!==(dayPhase()==='night'))refreshTrafficForDayPhase();
  }
  streamWorld();maintainTraffic(dt);if(started){tickPowers(dt);maintainPursuit(dt);}
