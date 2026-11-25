@@ -2064,7 +2064,7 @@ function generateIndustrialScene(s,point,box,road,building,obstacle,away,rng){
   const rows=waterfront?[.204,.247,.295]:[.20,.244,.293,.45,.495,.552,.609,.661,.714,.765];
   const stackAt=(u,v,uw=.047)=>{
    const color=TERMINAL_CONTAINER_COLORS[Math.floor(rng()*TERMINAL_CONTAINER_COLORS.length)],stack=1+Math.floor(rng()*4);
-   place(box(u,v,uw,.018),'container',{color,stack});
+   const q=box(u,v,uw,.018);place(q,'container',{color,stack,destroyed:brokenProps.has(Math.round(q.x)+','+Math.round(q.y))});
   };
   for(const v of rows)for(let n=0;n<11;n++){
    if(!waterfront&&n===5&&v>.43)continue;
@@ -7350,7 +7350,7 @@ function breakOldProp(d){
  d.destroyed=true;brokenProps.add(Math.round(d.x)+','+Math.round(d.y));progress.brokenProps=[...brokenProps].slice(-600);progressDirty=true;queueProgressSave();
  invalidateGroundTiles(d.x-d.hw-6,d.y-d.hh-6,d.x+d.hw+6,d.y+d.hh+6);minimapView.cachedRegion=null;
  explosions.push({x:d.x,y:d.y,age:0});if(explosions.length>12)explosions.shift();
- const colors=['#9b7b55','#7a5f40','#d8c27a','#8a6a4c','#5a4a3a',d.tone>.5?'#a86a4c':'#a89e88'];
+ const colors=d.color?[d.color,'#3d4a48','#e4d8b5','#2f3a3a']:['#9b7b55','#7a5f40','#d8c27a','#8a6a4c','#5a4a3a',d.tone>.5?'#a86a4c':'#a89e88'];
  for(let n=0;n<16;n++){
   const angle=random()*TAU,speed=.05+random()*.16,debris=n<8;
   particles.push({x:d.x+(random()-.5)*d.hw,y:d.y+(random()-.5)*d.hh,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
@@ -7423,13 +7423,27 @@ function scatterOilDrops(well,nx,ny){
  }
  if(particles.length>256)particles.splice(0,particles.length-256);
 }
+function scatterLetters(building,nx,ny){
+ if(simTime<(building.nextLetterBurst||0))return;
+ building.nextLetterBurst=simTime+720;
+ for(const win of bankWindows(building)){
+  if(win.nx*nx+win.ny*ny<.54)continue;
+  const outward=Math.atan2(win.ny,win.nx);
+  for(let i=0;i<10;i++){
+   const angle=outward+(random()-.5)*1.65,speed=.062+random()*.11;
+   particles.push({kind:'letter',x:win.x+win.nx*5,y:win.y+win.ny*5,
+    vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:580+random()*680,spin:(random()-.5)*.011,size:6+random()*3});
+  }
+ }
+ if(particles.length>256)particles.splice(0,particles.length-256);
+}
 function resolve(a,b,hit){
  if(a.destroyed||b.destroyed||ignoresCollision(a,b))return;
  const target=a===player?b:b===player?a:null;
  const {nx,ny,depth}=hit;
  const rvx=b.vx-a.vx,rvy=b.vy-a.vy,relative=rvx*nx+rvy*ny;
  if(target?.role==='weatheredHouse'&&-relative>.06){collapseHouse(target);player.vx*=.55;player.vy*=.55;return;}
- if(target?.kind==='oldProp'&&!target.destroyed&&-relative>.04){breakOldProp(target);player.vx*=.7;player.vy*=.7;return;}
+ if((target?.kind==='oldProp'||target?.kind==='container')&&!target.destroyed&&-relative>.04){breakOldProp(target);player.vx*=.7;player.vy*=.7;return;}
  if(turbo.active&&target&&destroyVehicle(target,true)){recordJobTakedown();return;}
  if(resolveNightSpeederCrash(a,b,hit))return;
  if(started&&target&&relative<-.055)playGameSound('impact',clamp(-relative/.38,.35,1));
@@ -7443,6 +7457,7 @@ function resolve(a,b,hit){
  if(relative<0){
    if(target?.role==='bank'&&-relative>.025)scatterBankMoney(target,target===a?nx:-nx,target===a?ny:-ny);
    if(target?.role==='pharmacy'&&-relative>.025)scatterPills(target,target===a?nx:-nx,target===a?ny:-ny);
+   if(target?.role==='postoffice'&&-relative>.025)scatterLetters(target,target===a?nx:-nx,target===a?ny:-ny);
    if(target?.kind==='pumpjack'&&-relative>.025)scatterOilDrops(target,target===a?nx:-nx,target===a?ny:-ny);
    const impulse=-(1+.23)*relative/sum;a.vx-=impulse*nx*a.invMass;a.vy-=impulse*ny*a.invMass;b.vx+=impulse*nx*b.invMass;b.vy+=impulse*ny*b.invMass;
    const tangent=rvx*(-ny)+rvy*nx,friction=clamp(-tangent/sum,-impulse*.27,impulse*.27);
@@ -8851,7 +8866,7 @@ function drawContainer(x,y,w,h,color,stack=1){
 }
 function drawDockDetail(d){
  const {x,y,hw,hh}=d;
- if(!visible(x,y,hw+12,hh+12))return;
+ if(d.destroyed||!visible(x,y,hw+12,hh+12))return;
  if(d.kind==='container')drawContainer(x-hw,y-hh,hw*2,hh*2,d.color,d.stack);
  if(d.kind==='cargoShip'){
   ctx.save();ctx.translate(x,y);
@@ -11299,6 +11314,15 @@ function drawOilDrop(p){
  circle(-p.size*.15,-p.size*.15,p.size*.16,'#4d5249');
  ctx.restore();
 }
+function drawLetter(p){
+ ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.life*p.spin);
+ const w=p.size,h=p.size*.62;
+ rounded(-w/2,-h/2,w,h,1,'#f6f1e4');
+ rect(-w/2+.6,-h/2+.6,w-1.2,.9,'#b8483f');
+ ctx.beginPath();ctx.strokeStyle='#8f877a';ctx.lineWidth=.6;
+ ctx.moveTo(-w/2+.8,-h/2+1);ctx.lineTo(0,h*.12);ctx.lineTo(w/2-.8,-h/2+1);ctx.stroke();
+ ctx.restore();
+}
 function draw(){
  const shift=shake>.1?Math.sin(performance.now()*.1)*shake:0,scale=pixelRatio*zoom;
  const exactX=(viewW/2+GAME_CANVAS_GUTTER+shift)*pixelRatio-camera.x*scale;
@@ -11325,6 +11349,7 @@ function draw(){
   if(p.kind==='bankCoin'||p.kind==='banknote')drawBankParticle(p);
   else if(p.kind==='pill')drawPill(p);
   else if(p.kind==='oilDrop')drawOilDrop(p);
+  else if(p.kind==='letter')drawLetter(p);
   else rect(p.x,p.y,p.size||2,p.size||2,p.color||'#f1d38e');
  }
  ctx.globalAlpha=1;
@@ -11495,7 +11520,7 @@ function mapRegion(g,cx,cy,span,w,h,labels=false){
    for(const d of s.obstacles)if(d.kind==='pumpjack'||d.kind==='oilTank')g.fillRect(d.x-d.hw,d.y-d.hh,d.hw*2,d.hh*2);
   }
   if(s.type==='docks')for(const d of s.decor){
-   if(d.kind!=='container'&&d.kind!=='cargoShip'&&d.kind!=='gantry')continue;
+   if(d.destroyed||d.kind!=='container'&&d.kind!=='cargoShip'&&d.kind!=='gantry')continue;
    g.fillStyle=d.kind==='container'?d.color:d.kind==='cargoShip'?'#d0cdb5':'#bf865f';
    g.fillRect(d.x-d.hw,d.y-d.hh,d.hw*2,d.hh*2);
   }
