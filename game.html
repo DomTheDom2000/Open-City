@@ -210,6 +210,7 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
    <button type="button" role="switch" data-admin-toggle="speed" aria-checked="false">Superspeed<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="nitro" aria-checked="false">Infinite nitro<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="phase" aria-checked="false">Ghost mode<span aria-hidden="true"></span></button>
+   <button type="button" role="switch" data-admin-toggle="roadArrows" aria-checked="true">Road arrows<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="police" aria-checked="false" hidden>Police chase<span aria-hidden="true"></span></button>
    <div class="admin-volume">
     <label for="musicVolume">Music volume</label>
@@ -351,6 +352,16 @@ const mod=(a,n)=>((a%n)+n)%n;
 function roadCoord(i,axis){return 240+i*SPACING+(worldHash(i,axis,17)-.5)*100;}
 function roadHalf(i,axis){return isHighway(i)?148:mod(i,5)===0?82:worldHash(i,axis,28)>.55?63:50;}
 function roadIndex(v,axis){let i=Math.floor((v-240)/SPACING);while(v<roadCoord(i,axis))i--;while(v>=roadCoord(i+1,axis))i++;return i;}
+// True when a footprint centred at (x,y) reaches into a highway corridor (reach = footprint radius).
+function onHighwayCorridor(x,y,reach=0){
+ for(const axis of [0,1]){
+  const v=axis===0?x:y,i=roadIndex(v,axis);
+  for(const index of [i,i+1])if(isHighway(index)&&Math.abs(v-roadCoord(index,axis))<=roadHalf(index,axis)+reach)return true;
+ }
+ return false;
+}
+// Parked cars are never allowed to sit on highways.
+const keepParkedOffHighways=c=>!onHighwayCorridor(c.x,c.y,Math.hypot(c.hw,c.hh));
 const xs=[],ys=[],blocks=[],buildings=[],obstacles=[],trees=[],parked=[],traffic=[],skids=[],particles=[],explosions=[],boundaries=[];
 let vehicleRemovalPending=false;
 // Weathered old-town houses the player has demolished, keyed by their lot position.
@@ -557,6 +568,18 @@ function layoutCafeSquare(b,build,tree){
   tree(x+w*u,y+h*.73,10);
  }
  for(const v of [.585,.875])yard('plazaBench',cx-.06,v,.12,.018);
+}
+// A chimney's column rises above its base, so yard paving it would cover is dropped.
+// Runs on final world positions, so mirrored (bottom-row) lots are handled too.
+const CHIMNEY_CLEAR_PAVING=['drive','factoryApron','retailLot','serviceBays'];
+function dropPavingUnderChimneys(decor){
+ const chimneys=decor.filter(d=>d.kind==='chimney');
+ if(!chimneys.length)return;
+ for(let i=decor.length-1;i>=0;i--){
+  const p=decor[i];
+  if(!CHIMNEY_CLEAR_PAVING.includes(p.kind))continue;
+  if(chimneys.some(c=>c.x+c.hw>p.x&&c.x-c.hw<p.x+p.w&&c.y-c.height<p.y+p.h&&c.y+c.hh>p.y))decor.splice(i,1);
+ }
 }
 function generateIndustrialBlock(b,build,park,prop,rng){
  const {x,y,w,h,type}=b;
@@ -780,6 +803,7 @@ function generateBlockParcel(i,j,feature){
    b.obstacles.push(body);b.decor.push(body);
   };
   generateIndustrialBlock(b,build,car,prop,rng);
+  dropPavingUnderChimneys(b.decor);
   return b;
  }
  if(feature.commercial){
@@ -2185,6 +2209,7 @@ function generateFactoryDevelopment(s,road,building,obstacle,away,rng){
   generateIndustrialBlock(lot,build,park,prop,rng);
   for(const d of lot.decor)s.decor.push({...d,y:orientY(d.y,d.h)});
  }
+ dropPavingUnderChimneys(s.decor);
 }
 function generateParkDevelopment(s,obstacle,away,rng){
  const {left,right,top,bottom}=s.land,w=right-left,h=bottom-top;
@@ -2439,7 +2464,7 @@ function getScene(a,b,development,roadsOnly=false){
 }
 function sceneTile(s,i,j){
  const left=roadCoord(i,0),top=roadCoord(j,1),right=roadCoord(i+1,0),bottom=roadCoord(j+1,1),owns=o=>o.x>=left&&o.x<right&&o.y>=top&&o.y<bottom;
- return {key:i+','+j,i,j,x:left,y:top,w:right-left,h:bottom-top,type:s.type,style:s.type==='oldtown'?'old':s.type==='docks'?'harbor':'garden',park:false,lot:false,scene:s,buildings:s.buildings.filter(owns),obstacles:s.obstacles.filter(owns),trees:s.trees.filter(owns),parked:s.parked.filter(owns),decor:[],name:s.name};
+ return {key:i+','+j,i,j,x:left,y:top,w:right-left,h:bottom-top,type:s.type,style:s.type==='oldtown'?'old':s.type==='docks'?'harbor':'garden',park:false,lot:false,scene:s,buildings:s.buildings.filter(owns),obstacles:s.obstacles.filter(owns),trees:s.trees.filter(owns),parked:s.parked.filter(owns).filter(keepParkedOffHighways),decor:[],name:s.name};
 }
 function gridRoad(axis,index,span){
  const coord=roadCoord(index,axis),highway=isHighway(index);
@@ -3192,7 +3217,7 @@ function applyWorld(snapshot,initial,refill){
   for(const item of source)target.push(item);
  }
  // Parked cars can be moved or destroyed while preparation is in progress.
- parked.length=0;for(const block of blocks)parked.push(...block.parked);
+ parked.length=0;for(const block of blocks)parked.push(...block.parked.filter(keepParkedOffHighways));
  Object.assign(staticHash,hash);
  Object.assign(navigation,roads.graph);streetlamps=roads.lamps;
  navigation.version++;for(const c of police)c.planTimer=Math.min(c.planTimer,30+c.unit*35);
@@ -4940,7 +4965,7 @@ function cleanAdminSettings(raw){
  const musicVolume=Number.isFinite(raw?.musicVolume)?Math.round(clamp(raw.musicVolume,0,100)):raw?.music===false?0:45;
  return {
   time:raw?.time==='day'||raw?.time==='night'?raw.time:'cycle',
-  npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,musicVolume,soundVolume
+  npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,roadArrows:raw?.roadArrows!==false,musicVolume,soundVolume
  };
 }
 function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],ownedBusinesses:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],brokenProps:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
@@ -5241,6 +5266,8 @@ function renderBusinessRoom(){
 function setTrophyTab(tab){
  const businesses=tab==='businesses';
  for(const button of $('trophyTabs').querySelectorAll('[data-trophy-tab]'))button.setAttribute('aria-selected',String((button.dataset.trophyTab==='businesses')===businesses));
+ // The purchase animation plays once; without this, showing the panel again would replay it.
+ for(const award of $('trophyDialog').querySelectorAll('.trophy-awarded'))award.classList.remove('trophy-awarded');
  $('trophyPanel').hidden=businesses;$('businessPanel').hidden=!businesses;
  $('trophyFeedback').textContent='';$('trophyDialog').scrollTop=0;
 }
@@ -6246,16 +6273,18 @@ function roadGuidanceProgress(x,y,heading,guidance){
 }
 function drawRoadTurnGuidance(){
  if(player.model==='train')return;
+ // Admin switch: players can keep only the minimap route line.
+ if(!progress.admin.roadArrows)return;
  if(!routeTarget())return;
  const guidance=routeNavigation.guidance,recent=guidance.recentTurn;
  if(!guidance.turns.length&&!recent)return;
  // Match from the same position used to plan the route, including just after a rebuild.
- const progress=guidance.segments.length?roadGuidanceProgress(player.x,player.y,player.angle,guidance):NaN;
+ const routeProgress=guidance.segments.length?roadGuidanceProgress(player.x,player.y,player.angle,guidance):NaN;
  const horizon=clamp(500+Math.hypot(player.vx,player.vy)*1050,540,1050);
  const cues=recent?[recent,...guidance.turns]:guidance.turns;let shown=0;
  ctx.save();ctx.lineCap=ctx.lineJoin='round';
  for(const turn of cues){
-  const remaining=turn===recent?-turnExitDistance(turn):turn.distance-progress;
+  const remaining=turn===recent?-turnExitDistance(turn):turn.distance-routeProgress;
   const extent=Math.max(turn.before,turn.after)+26;
   if(!Number.isFinite(remaining)||remaining<=-turn.clearAfter||remaining>=horizon||!visible(turn.x,turn.y,extent))continue;
   const fadeIn=clamp((horizon-remaining)/150,0,1),fadeOut=clamp((turn.clearAfter+remaining)/(turn.clearAfter*.65),0,1);
@@ -7444,7 +7473,8 @@ function resolve(a,b,hit){
  const rvx=b.vx-a.vx,rvy=b.vy-a.vy,relative=rvx*nx+rvy*ny;
  if(target?.role==='weatheredHouse'&&-relative>.06){collapseHouse(target);player.vx*=.55;player.vy*=.55;return;}
  if((target?.kind==='oldProp'||target?.kind==='container')&&!target.destroyed&&-relative>.04){breakOldProp(target);player.vx*=.7;player.vy*=.7;return;}
- if(turbo.active&&target&&destroyVehicle(target,true)){recordJobTakedown();return;}
+ // Boosting (turbo, or the speed pickup / admin Superspeed) turns collisions with cars into takedowns.
+ if((turbo.active||powerActive('speed'))&&target&&destroyVehicle(target,true)){recordJobTakedown();return;}
  if(resolveNightSpeederCrash(a,b,hit))return;
  if(started&&target&&relative<-.055)playGameSound('impact',clamp(-relative/.38,.35,1));
  if(a.kind==='traffic')a.bumpFor=1800;if(b.kind==='traffic')b.bumpFor=1800;
