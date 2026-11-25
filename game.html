@@ -211,8 +211,8 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
    <button type="button" role="switch" data-admin-toggle="nitro" aria-checked="false">Infinite nitro<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="phase" aria-checked="false">Ghost mode<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="roadArrows" aria-checked="true">Road arrows<span aria-hidden="true"></span></button>
-   <button type="button" role="switch" data-admin-toggle="racing" aria-checked="true">Street racing<span aria-hidden="true"></span></button>
-   <button type="button" role="switch" data-admin-toggle="police" aria-checked="false" hidden>Police chase<span aria-hidden="true"></span></button>
+   <button type="button" role="switch" data-admin-toggle="racing" aria-checked="true">Street racing (Beta)<span aria-hidden="true"></span></button>
+   <button type="button" role="switch" data-admin-toggle="police" aria-checked="false">Police chase (Beta)<span aria-hidden="true"></span></button>
    <div class="admin-volume">
     <label for="musicVolume">Music volume</label>
     <input id="musicVolume" type="range" min="0" max="100" step="1" value="45" aria-valuetext="45%">
@@ -241,7 +241,7 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
  </section>
 </div>
 <div class="modal" id="pauseModal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="pauseTitle"><button class="iconbtn close" data-close aria-label="Resume driving">×</button><div class="eyebrow">TAKE YOUR TIME</div><h2 id="pauseTitle">Parked for a moment.</h2><p>The city will be right here.</p><button class="start" id="resumeBtn">Keep driving <span>↗</span></button></section></div>
-<div class="modal" id="helpModal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><button class="iconbtn close" data-close aria-label="Close controls">×</button><div class="eyebrow">GET A FEEL FOR IT</div><h2 id="helpTitle" data-pad-hint="Controller controls">Your keys to the city.</h2><div class="help-row"><span>Accelerate</span><b data-pad-hint="{accelerate}">W / ↑</b></div><div class="help-row"><span>Brake, then reverse</span><b data-pad-hint="{reverse}">S / ↓</b></div><div class="help-row"><span>Steer (road vehicles)</span><b data-pad-hint="Left stick / D-pad ← →">A D / ← →</b></div><div class="help-row"><span>Handbrake / drift</span><b data-pad-hint="{brake}">SPACE</b></div><div class="help-row"><span>Recover to a clear road or railway</span><b data-pad-hint="{recover}">R</b></div><div class="help-row"><span>Garage / city map</span><b data-pad-hint="{garage} / {map}">G / M</b></div><div class="help-row"><span>Turbo (once unlocked)</span><b data-pad-hint="{boost} + {accelerate}">SHIFT + W / ↑</b></div><div class="help-row"><span>Cycle game modes / mode menu</span><b data-pad-hint="D-pad ↓ / ↑">C / V</b></div><div class="help-row"><span>Accept a ride or driving job</span><b data-pad-hint="{confirm}">E</b></div><div class="help-row"><span>Trophy Room</span><b data-pad-hint="{trophies}">B</b></div><div class="help-row"><span>Pause</span><b data-pad-hint="{pause}">ESC</b></div><div class="help-row"><span>Open controls</span><b data-pad-hint="{help}">? button</b></div><p>In Free Roam and Uber you can swap the car for the Streak motorbike in the garage: it is much faster, with its own upgrades and cosmetics. The Tractor has the Delivery Truck's speed and boost, with its own colours and performance upgrades, and keeps full speed on dirt, grass and fields. Weathered, half-collapsed houses in the old towns come down if you crash into them. Explore green pharmacies, hospital campuses, glass terminals, roof gardens and four distinct old-town styles. Airports range from regional airfields to international hubs with twin runways and larger airliners. Traffic includes hatchbacks, vans, trucks, buses, ambulances, fire trucks and motorbikes. Traffic drives at different speeds. Highway speeders and police drive aggressively. Emergency vehicles and highway speeders get priority at crossings. Ambulances and fire trucks keep normal following distances and cruise slightly faster than regular traffic. Fast motorcycle groups sometimes ride the expressways at night. Buildings and vehicles are solid. Ease off before a corner, or hold the handbrake to slide. Grass slows you down. Dirt trails have looser grip and a lower top speed. Open the map and use Find nearby to pin a residential, commercial or industrial sector, airport, giant Old Town, highway or giant reserve. Drive to earn spendable kilometres. Open the garage to upgrade the vehicle you are currently driving. Turbo recharges after use. While actively boosting, hitting another car makes it explode and clears it from your path—including parked cars and police. Every pursuing police car you destroy awards 100 bonus kilometres to spend in the garage. Glowing pickups appear occasionally as you drive: speed boost (15s), ghost drive through every obstacle with full speed on grass (18s), and infinite nitro (25s; boost even without a turbo upgrade). Collect them by driving over them. Ghost drive passes through buildings, traffic, police, planes, rocks and water. Cars you pass through while ghosting stay intact, even with nitro active. If ghost drive ends while you overlap an obstacle or vehicle, you can move clear before colliding with that object again. In Free Roam, turn on Police chase in the admin panel (`) for up to five coordinated pursuers: a chaser, an interceptor, two flankers and a unit aiming for junctions ahead. They close gaps at high speed, ram your car and intercept your path from ahead and both sides. Lost or destroyed units are quickly replaced ahead, outside your view. Changing mode ends the chase. Uber, bus and truck jobs have no time limit. Uber rides use your Runabout. Street Racing uses the same ride as Free Roam: stop on the chequered start grid, wait for the lights, then finish a sprint ahead of three rivals in your class of vehicle. Off-road shortcuts are allowed. Places pay 500, 300, 200 or 100 KM. Forfeiting a race, or leaving the mode, loses it.Stop at the marked curb to pick up one passenger, then drive them to their drop-off. Bus jobs have 2–6 stops, including the first pickup and final drop-off. Each offer shows its total stops and bonus KM; the active job shows which stop you are on. Choose Accept job to take an offer. Every new assignment needs your acceptance. Routes range from regional trips to cross-country journeys. Follow the marked bays and stop for two seconds to load or unload. Completed drop-offs earn KM. The clean-driving bonus starts at 100% and drops by 5 points per collision with a vehicle or building. Cars destroyed with boost don’t count. At the final drop-off, the remaining percentage of the full job fare is paid as an extra bonus. Jobs, passengers and cargo wait for you when you switch modes, and are saved between sessions. Use Next job to get an offer with a pickup near your current location, even after roaming far away. You still need to accept it. Use End job to leave an unfinished assignment. The bright purple map route favours main roads, highways and longer straight stretches, avoiding old-town and airport shortcuts where practical. Short purple arrows on the road mark upcoming turns during accepted jobs. They appear earlier at speed, fade after each turn and leave long straight roads clear. Car, Bus and Truck keep separate performance and cosmetic builds. Free Roam and Uber share the Car garage. Train mode places your three-car train on the nearest clear railway, with matching outward-facing cabs at each end and a carriage in the middle. Use <span data-pad-hint="{accelerate}">W / Up</span> to go forward, <span data-pad-hint="{reverse}">S / Down</span> to brake then reverse, and <span data-pad-hint="{brake}">Space</span> for stronger braking. Speed, acceleration and boost are equal in both directions. Between jobs, tap <span data-pad-hint="D-pad ← / →">A / Left or D / Right</span> to move one step through Left, Straight and Right for the next junction. For example, after choosing Right, tap Left once for Straight and again for Left. Choices follow your direction of travel, including while reversing. Without a selection the train continues straight, or follows your chosen map destination. You can change the queued turn until your leading cab enters the junction. During an accepted station job, junctions follow the job automatically. Stop with the center of any of the three cars inside the purple station marker for two seconds to load or unload. Railway jobs alternate passenger services and freight deliveries, with no time limit. The Train garage has its own upgrades. Open the map to set a rail destination between jobs. Occasional NPC trains stop at stations and obey shared signals. The entire railway, including junctions and stations, is elevated on continuous bridges. Road vehicles pass beneath it; trains and ground traffic never collide with or yield to each other. Tracks and bridge decks fade while driving a road vehicle and become fully opaque in Train mode. Switching back places your road vehicle on a nearby clear road. Your rail jobs, train position and upgrades are saved.</p><button class="start" data-close>Got it <span>↗</span></button></section></div>
+<div class="modal" id="helpModal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><button class="iconbtn close" data-close aria-label="Close controls">×</button><div class="eyebrow">GET A FEEL FOR IT</div><h2 id="helpTitle" data-pad-hint="Controller controls">Your keys to the city.</h2><div class="help-row"><span>Accelerate</span><b data-pad-hint="{accelerate}">W / ↑</b></div><div class="help-row"><span>Brake, then reverse</span><b data-pad-hint="{reverse}">S / ↓</b></div><div class="help-row"><span>Steer (road vehicles)</span><b data-pad-hint="Left stick / D-pad ← →">A D / ← →</b></div><div class="help-row"><span>Handbrake / drift</span><b data-pad-hint="{brake}">SPACE</b></div><div class="help-row"><span>Recover to a clear road or railway</span><b data-pad-hint="{recover}">R</b></div><div class="help-row"><span>Garage / city map</span><b data-pad-hint="{garage} / {map}">G / M</b></div><div class="help-row"><span>Turbo (once unlocked)</span><b data-pad-hint="{boost} + {accelerate}">SHIFT + W / ↑</b></div><div class="help-row"><span>Cycle game modes / mode menu</span><b data-pad-hint="D-pad ↓ / ↑">C / V</b></div><div class="help-row"><span>Accept a ride or driving job</span><b data-pad-hint="{confirm}">E</b></div><div class="help-row"><span>Trophy Room</span><b data-pad-hint="{trophies}">B</b></div><div class="help-row"><span>Pause</span><b data-pad-hint="{pause}">ESC</b></div><div class="help-row"><span>Open controls</span><b data-pad-hint="{help}">? button</b></div><p>In Free Roam and Uber you can swap the car for the Streak motorbike in the garage: it is much faster, with its own upgrades and cosmetics. The Tractor has the Delivery Truck's speed and boost, with its own colours and performance upgrades, and keeps full speed on dirt, grass and fields. Weathered, half-collapsed houses in the old towns come down if you crash into them. Explore green pharmacies, hospital campuses, glass terminals, roof gardens and four distinct old-town styles. Airports range from regional airfields to international hubs with twin runways and larger airliners. Traffic includes hatchbacks, vans, trucks, buses, ambulances, fire trucks and motorbikes. Traffic drives at different speeds. Highway speeders and police drive aggressively. Emergency vehicles and highway speeders get priority at crossings. Ambulances and fire trucks keep normal following distances and cruise slightly faster than regular traffic. Fast motorcycle groups sometimes ride the expressways at night. Buildings and vehicles are solid. Ease off before a corner, or hold the handbrake to slide. Grass slows you down. Dirt trails have looser grip and a lower top speed. Open the map and use Find nearby to pin a residential, commercial or industrial sector, airport, giant Old Town, highway or giant reserve. Drive to earn spendable kilometres. Open the garage to upgrade the vehicle you are currently driving. Turbo recharges after use. While actively boosting, hitting another car makes it explode and clears it from your path—including parked cars and police. Every pursuing police car you destroy awards 100 bonus kilometres to spend in the garage. Glowing pickups appear occasionally as you drive: speed boost (15s), ghost drive through every obstacle with full speed on grass (18s), and infinite nitro (25s; boost even without a turbo upgrade). Collect them by driving over them. Ghost drive passes through buildings, traffic, police, planes, rocks and water. Cars you pass through while ghosting stay intact, even with nitro active. If ghost drive ends while you overlap an obstacle or vehicle, you can move clear before colliding with that object again. Turn on Police chase in the admin panel (`), then pick it from the mode menu for up to five coordinated pursuers: a chaser, an interceptor, two flankers and a unit aiming for junctions ahead. They close gaps at high speed, ram your car and intercept your path from ahead and both sides. Lost or destroyed units are quickly replaced ahead, outside your view. Changing mode ends the chase. Uber, bus and truck jobs have no time limit. Uber rides use your Runabout. Street Racing uses the same ride as Free Roam: stop on the chequered start grid, wait for the lights, then finish a sprint ahead of three rivals in your class of vehicle. Off-road shortcuts are allowed. Places pay 500, 300, 200 or 100 KM. Forfeiting a race, or leaving the mode, loses it.Stop at the marked curb to pick up one passenger, then drive them to their drop-off. Bus jobs have 2–6 stops, including the first pickup and final drop-off. Each offer shows its total stops and bonus KM; the active job shows which stop you are on. Choose Accept job to take an offer. Every new assignment needs your acceptance. Routes range from regional trips to cross-country journeys. Follow the marked bays and stop for two seconds to load or unload. Completed drop-offs earn KM. The clean-driving bonus starts at 100% and drops by 5 points per collision with a vehicle or building. Cars destroyed with boost don’t count. At the final drop-off, the remaining percentage of the full job fare is paid as an extra bonus. Jobs, passengers and cargo wait for you when you switch modes, and are saved between sessions. Use Next job to get an offer with a pickup near your current location, even after roaming far away. You still need to accept it. Use End job to leave an unfinished assignment. The bright purple map route favours main roads, highways and longer straight stretches, avoiding old-town and airport shortcuts where practical. Short purple arrows on the road mark upcoming turns during accepted jobs. They appear earlier at speed, fade after each turn and leave long straight roads clear. Car, Bus and Truck keep separate performance and cosmetic builds. Free Roam and Uber share the Car garage. Train mode places your three-car train on the nearest clear railway, with matching outward-facing cabs at each end and a carriage in the middle. Use <span data-pad-hint="{accelerate}">W / Up</span> to go forward, <span data-pad-hint="{reverse}">S / Down</span> to brake then reverse, and <span data-pad-hint="{brake}">Space</span> for stronger braking. Speed, acceleration and boost are equal in both directions. Between jobs, tap <span data-pad-hint="D-pad ← / →">A / Left or D / Right</span> to move one step through Left, Straight and Right for the next junction. For example, after choosing Right, tap Left once for Straight and again for Left. Choices follow your direction of travel, including while reversing. Without a selection the train continues straight, or follows your chosen map destination. You can change the queued turn until your leading cab enters the junction. During an accepted station job, junctions follow the job automatically. Stop with the center of any of the three cars inside the purple station marker for two seconds to load or unload. Railway jobs alternate passenger services and freight deliveries, with no time limit. The Train garage has its own upgrades. Open the map to set a rail destination between jobs. Occasional NPC trains stop at stations and obey shared signals. The entire railway, including junctions and stations, is elevated on continuous bridges. Road vehicles pass beneath it; trains and ground traffic never collide with or yield to each other. Tracks and bridge decks fade while driving a road vehicle and become fully opaque in Train mode. Switching back places your road vehicle on a nearby clear road. Your rail jobs, train position and upgrades are saved.</p><button class="start" data-close>Got it <span>↗</span></button></section></div>
 <div class="modal" id="mapModal" hidden><section class="dialog map-dialog" role="dialog" aria-modal="true" aria-labelledby="mapTitle"><button class="iconbtn close" data-close aria-label="Close map">×</button><div class="map-head"><div class="eyebrow">THERE’S ALWAYS ANOTHER STREET</div><h2 id="mapTitle">Your next neighbourhood.</h2></div><div class="map-tools"><span id="mapArea"></span><div><button id="mapHome" aria-label="Centre map on your car">Locate me</button><button id="mapZoomOut" aria-label="Zoom out">−</button><button id="mapZoomIn" aria-label="Zoom in">+</button></div></div><div class="map-discover"><span>FIND NEARBY</span><button id="oldTownDiscovery" data-landscape="oldtown">Old Town</button><button data-landscape="industrial">Industrial sector</button><button data-landscape="residential">Residential sector</button><button data-landscape="commercial">Commercial sector</button><button data-landscape="highway">Highway</button><select id="reserveDiscovery" aria-label="Find a nature reserve"><option value="" selected disabled>Nature reserves</option><option value="any">Nearest reserve</option><option value="lake">Lake Trails</option><option value="river">River Valley</option><option value="pine">Pine Forest</option><option value="dense">Dense Forest</option><option value="meadow">Wildflower Meadows</option><option value="dry">Rocky Badlands</option><option value="wheat">Wheat Farm</option><option value="corn">Corn Farm</option><option value="hemp">Hemp / Cannabis Farm</option><option value="animals">Animal Farm</option></select><button id="clearDestination">Clear pin</button></div><canvas id="atlas" width="1000" height="800" aria-describedby="mapControlsHint" aria-label="Map of the surrounding city."></canvas><div class="map-foot"><span>↗ YOU · <span style="color:#e0c48b">━ RAIL · ● STATION</span></span><span id="mapControlsHint">Drag to explore · Scroll to zoom</span><span data-pad-hint="{back} TO CLOSE">M / ESC TO CLOSE</span></div></section></div>
 <div class="modal" id="garageModal" hidden><section class="dialog garage-dialog" role="dialog" aria-modal="true" aria-labelledby="garageTitle"><button class="iconbtn close" data-close aria-label="Close garage">×</button><div class="garage-head"><div><div class="eyebrow" id="garageEyebrow">NORTHSIDE CUSTOMS / CAR GARAGE</div><h2 id="garageTitle">Make it yours.</h2></div><div class="bank"><small>AVAILABLE TO SPEND</small><strong id="garageBank">0.00 <span>km</span></strong></div></div><div class="ride-switch" id="rideSwitch" role="group" aria-label="Choose your ride for Free Roam, Uber and Street Racing" hidden><button type="button" data-ride="car" aria-pressed="true">Car<span>The Runabout</span></button><button type="button" data-ride="bike" aria-pressed="false">Motorbike<span>The Streak · much faster</span></button><button type="button" data-ride="tractor" aria-pressed="false">Tractor<span>Full speed on any ground</span></button></div><p class="garage-intro" id="garageIntro">This garage belongs to the active vehicle. Its performance and style progress are saved independently.</p><div class="garage-layout"><section class="vehicle-card" id="garageVehicleCard" aria-label="Your car"><div class="vehicle-heading"><span id="garageVehicleHeading">THE RUNABOUT</span><span id="buildStatus">YOUR BUILD</span></div><canvas id="garageCar" width="640" height="400" aria-label="Preview of your equipped paint and cosmetics"></canvas><div class="vehicle-name" id="vehicleName"></div><div class="preview-actions" id="previewActions" hidden></div><div class="vehicle-stats" id="vehicleStats"></div><p class="garage-save" id="garageSave">Progress saved in this browser.</p></section><div class="garage-shop"><div class="garage-tabs" aria-label="Upgrade category"><button class="garage-tab" data-shop-tab="paint" aria-pressed="true" aria-controls="styleShop">Paint</button><button class="garage-tab" data-shop-tab="livery" aria-pressed="false" aria-controls="styleShop">Liveries</button><button class="garage-tab" data-shop-tab="wheels" aria-pressed="false" aria-controls="styleShop">Wheels</button><button class="garage-tab" data-shop-tab="lighting" aria-pressed="false" aria-controls="styleShop">Lights</button><button class="garage-tab" data-shop-tab="detail" aria-pressed="false" aria-controls="styleShop">Body</button><button class="garage-tab" data-shop-tab="performance" aria-pressed="false" aria-controls="performanceShop">Performance</button></div><div id="performanceShop"></div><div id="styleShop" hidden></div><p class="garage-feedback" id="garageFeedback" role="status" aria-live="polite">A little more road. A little more you.</p></div></div><div class="garage-bottom"><span>The city is paused. Cosmetic previews are free. Bought items stay with this vehicle and can be equipped any time.</span><button class="start" data-close>Back to the city <span>↗</span></button></div></section></div>
 <section class="job-card" id="jobCard" aria-label="Current driving job" hidden>
@@ -260,7 +260,7 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
 <div class="modal" id="modeModal" hidden><section class="dialog mode-dialog" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
  <button class="iconbtn close" data-close aria-label="Close game modes">×</button>
  <h2 id="modeTitle">Choose a mode</h2>
- <p class="mode-intro">Free Roam, Uber and Street Racing use your car, motorbike or tractor (switch rides in the garage). Police chase can be turned on in Free Roam from the admin panel.</p>
+ <p class="mode-intro">Free Roam, Police chase, Uber and Street Racing use your car, motorbike or tractor (switch rides in the garage). Police chase appears here once it is turned on in the admin panel.</p>
  <div class="mode-grid" id="modeCards"></div>
  <div class="mode-foot"><span><kbd data-pad-hint="D-pad">C</kbd> <span data-pad-hint="Navigate">Cycle modes</span></span><span><kbd data-pad-hint="{confirm}">V</kbd> <span data-pad-hint="Select mode">Mode picker</span></span><span><kbd data-pad-hint="{back}">E</kbd> <span data-pad-hint="Close menu">Accept a job</span></span></div>
  <p class="mode-note">Jobs have no time limits and resume when you return to their mode. A street race is lost if you forfeit it or leave Street Racing.</p>
@@ -2631,7 +2631,7 @@ function trafficDriver(model,id,gang,highway){
 }
 function chooseTrafficModel(roadType){
  if(roadType==='offroad'||random()>=EMERGENCY_TRAFFIC_SHARE)return choose(TRAFFIC_MIX[roadType]||TRAFFIC_MIX.city);
- return choose(progress.policeEnabled?CHASE_EMERGENCY_MODELS:EMERGENCY_MODELS);
+ return choose(pursuitOn()?CHASE_EMERGENCY_MODELS:EMERGENCY_MODELS);
 }
 function trafficCandidate(route,distance,roadType,cruise,initial=false,gang=0){
  const p=routeAt(route,distance),tractorReserve=route.tractorReserve;
@@ -4795,7 +4795,7 @@ const CLEAN_DRIVING_START=100,CLEAN_DRIVING_PENALTY=5,CLEAN_CONTACT_GAP=180;
 const TAKEDOWN_BONUS_PERCENT=5;
 // Street Racing: payouts by finishing place (1st to 4th), in KM.
 const RACE_REWARD_KM=[500,300,200,100],RACE_RIVAL_PACE=[1,.985,.97],RACE_RIVAL_COLORS=['#d9554f','#4f8fd9','#e0b94f'];
-const RACE_GRID_HOLD_MS=900,RACE_COUNTDOWN_MS=3000,RACE_FINISH_RADIUS=26,RACE_GRID_RADIUS=10;
+const RACE_GRID_HOLD_MS=900,RACE_COUNTDOWN_MS=3000,RACE_FINISH_RADIUS=44,RACE_GRID_RADIUS=10;
 let raceRun=null,raceCars=[];
 const cleanDrivingContacts=new WeakMap();
 const CLEAN_COLLISION_KINDS=new Set(['building','traffic','parked','police']);
@@ -4803,11 +4803,12 @@ const GAME_MODES={
  train:{name:'Train',vehicle:'Regional Express',model:'train',color:'#e1be78',pace:1.35,accel:.38,steer:0,brake:1,description:'Drive elevated railways in either direction. Tap A / D to step through junction choices between jobs. Jobs guide you automatically.',reward:'Passenger and freight jobs · Separate Train upgrades.'},
  free:{name:'Free roam',vehicle:'The Runabout',model:'sedan',color:'#d4ed89',pace:1,accel:1,steer:1,brake:1,description:'Explore the city at your own pace.',reward:'Earn KM as you drive.'},
  uber:{name:'Uber',vehicle:'The Runabout',model:'sedan',color:'#d2a8ee',pace:1,accel:1,steer:1,brake:1,description:'Pick up a passenger and take them across town.',reward:'+'+RIDE_REWARD_KM+' KM per completed ride.'},
+ police:{name:'Police chase',vehicle:'Your ride',model:'sedan',color:'#7fa6e0',pace:1,accel:1,steer:1,brake:1,description:'Outrun up to five coordinated police units that chase you across the city. Keep moving to stay ahead of the pursuit.',reward:'+100KM for each police car destroyed'},
  race:{name:'Street Racing',vehicle:'Your ride',model:'sedan',color:'#f2c14e',pace:1,accel:1,steer:1,brake:1,description:'Race a sprint from a standing grid against three rivals in your class of vehicle.',reward:'Finish 1st to 4th for '+RACE_REWARD_KM.join(', ')+' KM.'},
  bus:{name:'Bus',vehicle:'City Bus',model:'bus',color:'#d5b866',pace:.80,accel:.72,steer:.74,brake:.88,description:'Carry passengers along a 2–6-stop route.',reward:'+5 KM per passenger dropped off · +20 KM per route.'},
  truck:{name:'Truck',vehicle:'Delivery Truck',model:'truck',color:'#8bb0a3',pace:.84,accel:.78,steer:.80,brake:.90,description:'Pick up freight at a depot and deliver it to a shop.',reward:'+'+TRUCK_REWARD_KM+' KM per completed delivery.'}
 };
-const MODE_ORDER=['free','uber','race','bus','truck','train'],JOB_MODES=['uber','race','bus','truck','train'];
+const MODE_ORDER=['free','uber','race','police','bus','truck','train'],JOB_MODES=['uber','race','bus','truck','train'];
 const BUS_STOP_COUNTS=[2,3,4,5,6],BUS_BOARDING=[6,4,3,5,4],BUS_ALIGHTING=[0,2,4,3,5];
 function busStopService(job,index=job.index){
  let onboard=0;
@@ -4971,16 +4972,19 @@ function cleanAdminSettings(raw){
  const musicVolume=Number.isFinite(raw?.musicVolume)?Math.round(clamp(raw.musicVolume,0,100)):raw?.music===false?0:45;
  return {
   time:raw?.time==='day'||raw?.time==='night'?raw.time:'cycle',
-  npcs:raw?.npcs!==false,racing:raw?.racing!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,roadArrows:raw?.roadArrows!==false,musicVolume,soundVolume
+  npcs:raw?.npcs!==false,racing:raw?.racing!==false,police:raw?.police===true,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,roadArrows:raw?.roadArrows!==false,musicVolume,soundVolume
  };
 }
-function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],ownedBusinesses:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,race:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,race:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],brokenProps:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
+function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],ownedBusinesses:[],mode:'free',jobs:{},offers:{},completedJobs:{uber:0,race:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,race:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],brokenProps:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
 function cleanProgress(p){
  if(!p||p.version!==1||!Number.isSafeInteger(p.earnedMm)||p.earnedMm<0||!Number.isSafeInteger(p.spentMm)||p.spentMm<0||p.spentMm>p.earnedMm)return null;
  const clean=freshProgress();clean.admin=cleanAdminSettings(p.admin);clean.earnedMm=p.earnedMm;clean.spentMm=p.spentMm;
  /* Police chase used to be a mode; migrate those saves to free roam with the chase on. */
  const legacyPolice=p.mode==='police'||p.policeEnabled===true;
- clean.mode=Object.hasOwn(GAME_MODES,p.mode)&&!(p.mode==='race'&&clean.admin.racing===false)?p.mode:'free';clean.policeEnabled=legacyPolice&&clean.mode==='free';
+ /* Police chase used to be a free-roam toggle; saves that had it on now play the Police chase mode, which stays visible. */
+ if(legacyPolice)clean.admin.police=true;
+ const hiddenMode=(p.mode==='race'&&clean.admin.racing===false)||(p.mode==='police'&&clean.admin.police!==true);
+ clean.mode=Object.hasOwn(GAME_MODES,p.mode)&&!hiddenMode?p.mode:legacyPolice?'police':'free';
  const owned=new Set(Array.isArray(p.ownedTrophies)?p.ownedTrophies:[]);
  clean.ownedTrophies=TROPHIES.filter(item=>owned.has(item.id)).map(item=>item.id);
  const ownedBusinesses=new Set(Array.isArray(p.ownedBusinesses)?p.ownedBusinesses:[]);
@@ -5196,7 +5200,7 @@ function drawPickupMapMarkers(g,m,showSymbol=false){
 }
 
 let shopTab='paint',previewSelection=null,equippedAppearance=null;
-function garageKindForMode(mode=progress.mode){const ride=(mode==='free'||mode==='uber'||mode==='race')?progress.ride:'car';return mode==='train'?'train':mode==='bus'?'bus':mode==='truck'?'truck':ride==='bike'||ride==='tractor'?ride:'car';}
+function garageKindForMode(mode=progress.mode){const ride=(isFreeRoam(mode)||mode==='uber'||mode==='race')?progress.ride:'car';return mode==='train'?'train':mode==='bus'?'bus':mode==='truck'?'truck':ride==='bike'||ride==='tractor'?ride:'car';}
 function handling(mode=progress.mode){const kind=garageKindForMode(mode);return kind==='bike'?{...GAME_MODES[mode],...BIKE_HANDLING}:kind==='tractor'?{...GAME_MODES[mode],...tractorHandling()}:GAME_MODES[mode];}
 function garageState(modeOrKind=progress.mode){const kind=Object.hasOwn(GARAGE_VEHICLES,modeOrKind)?modeOrKind:garageKindForMode(modeOrKind);return progress.garages[kind];}
 function garageCategories(kind=garageKindForMode()){return GARAGE_CATEGORIES[kind];}
@@ -5803,7 +5807,7 @@ const routeNavigation={key:'',legKey:'',x:NaN,y:NaN,points:[],guidance:{segments
 function currentJob(){return JOB_MODES.includes(progress.mode)?progress.jobs[progress.mode]||null:null;}
 function currentOffer(){return JOB_MODES.includes(progress.mode)?progress.offers[progress.mode]||null:null;}
 function jobTarget(){const job=currentJob();return job?.accepted?job.stops[job.index]||null:null;}
-function freeRoamWaypoint(){return progress.mode==='free'?exploration.waypoint:null;}
+function freeRoamWaypoint(){return isFreeRoam()?exploration.waypoint:null;}
 function routeTarget(){return jobTarget()||freeRoamWaypoint();}
 function recordJobCollision(other){
  if(!started||!CLEAN_COLLISION_KINDS.has(other.kind))return;
@@ -5848,6 +5852,7 @@ function installModeVehicle(){Object.assign(player,modeVehicle());}
 function setGameMode(mode,announce=true){
  if(!Object.hasOwn(GAME_MODES,mode)||mode===progress.mode)return false;
  if(mode==='race'&&progress.admin.racing===false)return false;
+ if(mode==='police'&&progress.admin.police!==true)return false;
  const candidate={...player,...modeVehicle(mode)},oldPos={x:player.x,y:player.y};let placement=null;
  const leavingRail=progress.mode==='train';
  if(mode==='train')placement=railEnter();
@@ -5865,17 +5870,17 @@ function setGameMode(mode,announce=true){
   placement=choices.find(p=>insideLoaded(p.x,p.y,50)&&clearSpot({...candidate,...p}));
  }
  if(!placement){toast('No room to change vehicles here. Move to a clearer street and try again.');return false;}
- // Changing mode always ends a police chase; it can only be started again in Free Roam.
+ // Leaving the police chase ends the pursuit.
  // Leaving a street race forfeits it.
  if(progress.mode==='race')abandonRace();
- progress.mode=mode;progress.policeEnabled=false;previewSelection=null;applyBuild();clearKeys();
+ progress.mode=mode;previewSelection=null;applyBuild();clearKeys();
  if(leavingRail||mode==='train'){resetRailPickup();player.vx=player.vy=0;turbo.active=false;railway.navKey='';railway.destination=null;railway.manualTurn=null;}
  if(Math.hypot(placement.x-oldPos.x,placement.y-oldPos.y)>.5){Object.assign(player,placement,{vx:0,vy:0});snapCamera(player.x,player.y);powers.exitBodies.clear();}
  if(leavingRail||mode==='train'){streamWorld(true);sceneryCache.valid=false;minimapView.cachedRegion=null;}
  if(leavingRail)railway.roadSpawnIn=Math.min(railway.roadSpawnIn,2400);
  player.hit=0;snapshotPlayer();interpolatePlayer();turbo.active=false;shake=0;
  Object.assign(service,{jobId:null,ms:0,retryIn:0});routeNavigation.key='';routeNavigation.points=[];
- if(!progress.policeEnabled){police.length=0;Object.assign(policeState,{hits:0,reinforcements:0,reinforceIn:POLICE_BACKUP_DELAY,scanIn:0,dispatchFor:0});}
+ if(!pursuitOn())clearPursuit();
  else if(started)deployPolice();
  rebuildDynamic();
  const offer=currentOffer();
@@ -5883,11 +5888,11 @@ function setGameMode(mode,announce=true){
  if(started)ensureJobOffer();
  progressDirty=true;saveProgress();updatePoliceHUD();updateHUD();
  if(activeModal==='modeModal')renderModeMenu();if(activeModal==='mapModal'){mapView.dirty=true;drawAtlas();}
- if(announce)toast(GAME_MODES[mode].name+(JOB_MODES.includes(mode)?' · '+(jobTarget()?'Your next stop is marked on the map.':inputHint('Press E to accept your next job.','Press {confirm} to accept your next job.')):' · The city is yours.'));
+ if(announce)toast(GAME_MODES[mode].name+(JOB_MODES.includes(mode)?' · '+(jobTarget()?'Your next stop is marked on the map.':inputHint('Press E to accept your next job.','Press {confirm} to accept your next job.')):(mode==='police'?' · Keep moving.':' · The city is yours.')));
  return true;
 }
-// Street Racing can be hidden from the admin panel; every mode list goes through this.
-function visibleModeOrder(){return MODE_ORDER.filter(id=>id!=='race'||progress.admin.racing!==false);}
+// Street Racing and Police chase can be hidden from the admin panel; every mode list goes through this.
+function visibleModeOrder(){return MODE_ORDER.filter(id=>(id!=='race'||progress.admin.racing!==false)&&(id!=='police'||progress.admin.police===true));}
 function cycleGameMode(){const order=visibleModeOrder();return setGameMode(order[(order.indexOf(progress.mode)+1)%order.length]);}
 function cityJobType(i,j){
  const feature=featureAt(i,j);
@@ -6456,7 +6461,8 @@ function drawRaceMarker(target){
  const finish=target.action==='finish';
  ctx.save();ctx.translate(target.x,target.y);ctx.rotate(target.angle);
  if(finish){
-  for(let i=0;i<2;i++)for(let j=0;j<6;j++)rect(-8+i*8,-24+j*8,8,8,(i+j)%2?'#f4f1e6':'#15171a');
+  // Two columns of chequers, spanning 88 units across the road (was 48).
+  for(let i=0;i<2;i++)for(let j=0;j<11;j++)rect(-8+i*8,-44+j*8,8,8,(i+j)%2?'#f4f1e6':'#15171a');
  }else{
   // Same purple parking bay as job pickups, sized to one car on the grid spot.
   const halfLength=24,halfWidth=13,color=JOB_ROUTE_COLOR;
@@ -6684,6 +6690,12 @@ function renderModeMenu(){
    g.strokeStyle='#b981d282';g.lineWidth=2;g.setLineDash([4,4]);
    g.beginPath();g.moveTo(-93,10);g.bezierCurveTo(-50,10,45,-12,93,-12);g.stroke();g.setLineDash([]);
    for(const [x,y] of [[-93,10],[93,-12]]){g.fillStyle=mode.color;g.beginPath();g.arc(x,y,5,0,TAU);g.fill();}
+  }
+  if(id==='police'){
+   // A police cruiser in livery, the same car the chase sends after you.
+   const cruiser=makeCar(0,0,-.12,EMERGENCY_PAINT.police,'police');g.scale(3.55,3.55);
+   paintVehicle(g,cruiser,false,0,0,-.12);g.restore();
+   continue;
   }
   const model=GARAGE_VEHICLES[kind].model,scale=model==='sedan'?3.55:model==='sportbike'?4.3:2.9;g.scale(scale,scale);
   const vehicle=makeCar(0,0,-.12,look.paint.color,'traffic',model);
@@ -7046,7 +7058,7 @@ function retryMusic(){
 document.addEventListener('click',retryMusic);
 document.addEventListener('keydown',retryMusic);
 document.addEventListener('pointerup',retryMusic);
-function start(){if(started)return;started=true;unlockGameAudio();syncMusic();$('intro').hidden=true;document.body.classList.add('driving');canvas.focus({preventScroll:true});if(progress.policeEnabled&&progress.admin.npcs){deployPolice();toast('Police pursuit on. Keep moving.');}else if(JOB_MODES.includes(progress.mode))toast(GAME_MODES[progress.mode].name+(jobTarget()?' · Your accepted job is ready to resume.':' · '+inputHint('Press E to accept a job.','Press {confirm} to accept a job.'))); else toast('Welcome to '+neighbourhood(player.x,player.y)+'. Take any turn.');ensureJobOffer();updateHUD();updatePoliceHUD();}
+function start(){if(started)return;started=true;unlockGameAudio();syncMusic();$('intro').hidden=true;document.body.classList.add('driving');canvas.focus({preventScroll:true});if(pursuitOn()&&progress.admin.npcs){deployPolice();toast('Police pursuit on. Keep moving.');}else if(JOB_MODES.includes(progress.mode))toast(GAME_MODES[progress.mode].name+(jobTarget()?' · Your accepted job is ready to resume.':' · '+inputHint('Press E to accept a job.','Press {confirm} to accept a job.'))); else toast('Welcome to '+neighbourhood(player.x,player.y)+'. Take any turn.');ensureJobOffer();updateHUD();updatePoliceHUD();}
 function renderAdminVolume(id){
  const slider=$(id),volume=progress.admin[id];
  if(slider.valueAsNumber!==volume)slider.value=volume;
@@ -7126,11 +7138,7 @@ function renderAdminPanel(){
  $('adminMusicTrack').textContent=audio?audio.src.split('/').pop().replace(/\.m4a$/i,''):'None';
  for(const button of $('adminModal').querySelectorAll('[data-admin-time]'))button.setAttribute('aria-pressed',String(settings.time===button.dataset.adminTime));
  for(const button of $('adminModal').querySelectorAll('[data-admin-toggle]')){
-  if(button.dataset.adminToggle==='police'){
-   // Only offered in Free Roam; its state lives on the saved progress, not the admin settings.
-   button.hidden=progress.mode!=='free';
-   button.setAttribute('aria-checked',String(progress.policeEnabled));
-  }else button.setAttribute('aria-checked',String(settings[button.dataset.adminToggle]));
+  button.setAttribute('aria-checked',String(settings[button.dataset.adminToggle]));
  }
 }
 function setAdminNPCs(enabled){
@@ -7145,7 +7153,7 @@ function setAdminNPCs(enabled){
   trafficRefreshIn=0;
   railway.spawnIn=Math.min(railway.spawnIn,2000);
   railway.roadSpawnIn=Math.min(railway.roadSpawnIn,1500);
-  if(started&&progress.policeEnabled)deployPolice();
+  if(started&&pursuitOn())deployPolice();
  }
  rebuildDynamic();finishGhostExit();updatePoliceHUD();
 }
@@ -7159,18 +7167,17 @@ $('adminModal').addEventListener('click',event=>{
   settings.time=adminTime;
   if(wasNight!==isNight())refreshTrafficForDayPhase();
  }else if(adminToggle==='npcs')setAdminNPCs(!settings.npcs);
- else if(adminToggle==='police')setPoliceEnabled(!progress.policeEnabled);
- else if(adminToggle==='racing'){
-  settings.racing=!settings.racing;
-  // Hiding street racing while in it sends the player to Free Roam, which forfeits the race.
-  if(!settings.racing&&progress.mode==='race'){
+ else if(adminToggle==='racing'||adminToggle==='police'){
+  // Both are mode choices: hiding one while in it sends the player to Free Roam (which forfeits a race or ends a chase).
+  const modeId=adminToggle==='racing'?'race':'police';
+  settings[adminToggle]=!settings[adminToggle];
+  if(!settings[adminToggle]&&progress.mode===modeId){
    if(!setGameMode('free',false)){
     // No clear room to change vehicles here: switch the mode in place and reset the vehicle.
-    abandonRace();progress.mode='free';progress.policeEnabled=false;installModeVehicle();applyBuild();
+    abandonRace();clearPursuit();progress.mode='free';installModeVehicle();applyBuild();
    }
   }
- }
- else{
+ } else{
   settings[adminToggle]=!settings[adminToggle];
   if(adminToggle==='phase'){
    if(powerActive('phase'))powers.exitBodies.clear();
@@ -7280,7 +7287,7 @@ addEventListener('keydown',e=>{
  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key)){if(key!==' '||document.activeElement.tagName!=='BUTTON')e.preventDefault();}
  if(e.repeat&&['r','m','g','b','c','v','e','n','escape','p'].includes(key))return;
  if(activeModal==='mapModal'&&['arrowup','arrowdown','arrowleft','arrowright','+','=','-'].includes(key)){e.preventDefault();if(key==='+'||key==='=')zoomMap(.75);else if(key==='-')zoomMap(1/.75);else{mapView.x+=(key==='arrowright'?1:key==='arrowleft'?-1:0)*mapView.span*.12;mapView.y+=(key==='arrowdown'?1:key==='arrowup'?-1:0)*mapView.span*.12;mapView.dirty=true;}return;}
- if(activeModal==='mapModal'&&(progress.mode==='free'||progress.mode==='train')&&document.activeElement===atlas&&key==='enter'){
+ if(activeModal==='mapModal'&&(isFreeRoam()||progress.mode==='train')&&document.activeElement===atlas&&key==='enter'){
   e.preventDefault();if(!e.repeat)setMapWaypoint(mapView.x,mapView.y);return;
  }
  if(key==='escape'&&activeModal==='trophyModal'&&trophyPending){dismissTrophyConfirmation(true);return;}
@@ -7490,7 +7497,7 @@ function policeTarget(c){
  c.targetX=x;c.targetY=y;return distance;
 }
 function maintainPursuit(dt){
- if(!started||!progress.policeEnabled||!progress.admin.npcs)return;
+ if(!started||!pursuitOn()||!progress.admin.npcs)return;
  policeState.reinforceIn=Math.max(0,policeState.reinforceIn-dt);policeState.scanIn=Math.max(0,policeState.scanIn-dt);
  const hadNotice=policeState.dispatchFor>0;policeState.dispatchFor=Math.max(0,policeState.dispatchFor-dt);if(hadNotice&&policeState.dispatchFor===0)updatePoliceHUD();
  if(policeState.scanIn>0||policeState.reinforceIn>0)return;policeState.scanIn=400;
@@ -7537,25 +7544,15 @@ function deployPolice(){
  rebuildDynamic();updatePoliceHUD();
 }
 function updatePoliceHUD(){
- const enabled=progress.policeEnabled&&progress.admin.npcs;
+ const enabled=pursuitOn()&&progress.admin.npcs;
  $('pursuitStatus').hidden=!enabled;
  $('pursuitStatus').textContent=!started?'Chase starts when you drive':police.length+(policeState.dispatchFor>0?' units · interceptor inbound':' units in pursuit');
  document.body.classList.toggle('police-on',enabled);
 }
-// Police chase is a toggle inside Free Roam, set from the admin panel.
-function setPoliceEnabled(enabled,announce=true){
- if(progress.mode!=='free'||enabled===progress.policeEnabled)return false;
- progress.policeEnabled=enabled;
- if(enabled){
-  for(let i=traffic.length-1;i>=0;i--)if(traffic[i].model==='police')traffic.splice(i,1);
-  if(started&&progress.admin.npcs)deployPolice();
- }else{
-  police.length=0;Object.assign(policeState,{hits:0,reinforcements:0,reinforceIn:POLICE_BACKUP_DELAY,scanIn:0,dispatchFor:0});
- }
- rebuildDynamic();updatePoliceHUD();progressDirty=true;saveProgress();updateHUD();
- if(announce&&started)toast(enabled?'Police chase on. Keep moving.':'Police chase off.');
- return true;
-}
+// Police chase is a game mode; these helpers keep the pursuit tied to it.
+function isFreeRoam(mode=progress.mode){return mode==='free'||mode==='police';}
+function pursuitOn(){return progress.mode==='police';}
+function clearPursuit(){police.length=0;Object.assign(policeState,{hits:0,reinforcements:0,reinforceIn:POLICE_BACKUP_DELAY,scanIn:0,dispatchFor:0});}
 function updatePolice(c,dt){
  c.planTimer-=dt;c.stun=Math.max(0,c.stun-dt);c.checkTimer+=dt;
  if(c.planTimer<=0){planPolice(c);c.planTimer=210+c.unit*17;}
@@ -11733,7 +11730,7 @@ function nearestWaypointRoad(x,y){
 }
 function setMapWaypoint(x,y,name='Waypoint'){
  if(progress.mode==='train')return railSetDestination(x,y);
- if(progress.mode!=='free')return false;
+ if(!isFreeRoam())return false;
  const road=nearestWaypointRoad(x,y);if(!road)return false;
  exploration.waypoint={x:road.x,y:road.y,angle:road.angle,width:road.width,name};
  exploration.target=null;routeNavigation.key='';mapView.dirty=true;updateHUD();
@@ -11794,7 +11791,7 @@ function nearestBuiltSector(a,b,type,style){
  return {...best,...target,name};
 }
 function findLandscape(type,style){
- if(type==='station'){const s=railFindStation();exploration.target={...s};mapView.x=s.x;mapView.y=s.y;mapView.span=2600;mapView.dirty=true;if(progress.mode==='train'&&!jobTarget())railSetDestination(s.x,s.y);else if(progress.mode==='free')setMapWaypoint(s.x,s.y,s.name);drawAtlas();return;}
+ if(type==='station'){const s=railFindStation();exploration.target={...s};mapView.x=s.x;mapView.y=s.y;mapView.span=2600;mapView.dirty=true;if(progress.mode==='train'&&!jobTarget())railSetDestination(s.x,s.y);else if(isFreeRoam())setMapWaypoint(s.x,s.y,s.name);drawAtlas();return;}
  const ci=roadIndex(player.x,0),cj=roadIndex(player.y,1),a=Math.floor(ci/3),b=Math.floor(cj/3);let best=null;
  const giant=type==='giant-reserve'||type==='giant-badlands',built=['industrial','residential','commercial','oldtown'].includes(type);
  if(giant)best=nearestGiantReserve(a,b,type==='giant-badlands'?'dry':style);
@@ -11811,7 +11808,7 @@ function findLandscape(type,style){
   if(best&&type==='airport')Object.assign(best,getScene(best.a,best.b).entry);
  }
  if(!best)return;
- if(progress.mode==='free')setMapWaypoint(best.x,best.y,best.name);
+ if(isFreeRoam())setMapWaypoint(best.x,best.y,best.name);
  else{exploration.target=best;updateHUD();}
  mapView.x=best.x;mapView.y=best.y;mapView.span=4200;mapView.dirty=true;
  if(giant||built){
@@ -11964,7 +11961,7 @@ function drawAtlas(){
  if(px>=0&&px<=w&&py>=0&&py<=h)playerMapMarker(actx,px,py,1.4);
  actx.font='bold 13px Arial';actx.textAlign='right';actx.fillStyle='#173f35';actx.fillText('↑ N',w-16,25);
  $('mapArea').textContent=districtAt(roadIndex(mapView.x,0),roadIndex(mapView.y,1)).name+' · '+(mapView.span*.8/1000).toFixed(1)+' km across';
- const canSetWaypoint=progress.mode==='free'||(progress.mode==='train'&&!jobTarget());
+ const canSetWaypoint=isFreeRoam()||(progress.mode==='train'&&!jobTarget());
  atlas.tabIndex=canSetWaypoint?0:-1;atlas.classList.toggle('can-set-waypoint',canSetWaypoint);
  updateMapControlsHint();
  $('mapZoomIn').disabled=mapView.span<=1800;$('mapZoomOut').disabled=mapView.span>=10000;mapView.dirty=false;
@@ -11983,7 +11980,7 @@ for(const [id,type] of [['reserveDiscovery','giant-reserve']])$(id).onchange=e=>
  findLandscape(type,option==='any'?undefined:option);
  menu.selectedIndex=0;
 };
-$('clearDestination').onclick=()=>{if(progress.mode==='free')exploration.waypoint=null;if(progress.mode==='train'){railway.destination=null;railway.navKey='';}exploration.target=null;mapView.dirty=true;updateHUD();};
+$('clearDestination').onclick=()=>{if(isFreeRoam())exploration.waypoint=null;if(progress.mode==='train'){railway.destination=null;railway.navKey='';}exploration.target=null;mapView.dirty=true;updateHUD();};
 $('mapZoomIn').onclick=()=>zoomMap(.75);$('mapZoomOut').onclick=()=>zoomMap(1/.75);$('mapHome').onclick=()=>{mapView.x=player.x;mapView.y=player.y;mapView.dirty=true;};
 function atlasDisplay(){
  const rect=atlas.getBoundingClientRect(),ratio=atlas.width/atlas.height;
@@ -12090,7 +12087,7 @@ function loop(now){
 if(progress.position)Object.assign(player,progress.position);snapshotPlayer();safePosition={x:player.x,y:player.y,angle:player.angle};snapCamera(player.x,player.y);interpolatePlayer();
 applyBuild();if(progress.mode==='train'){if(!railRestore(progress.railPosition,progress.previousRailPosition)){const p=railEnter();if(p)Object.assign(player,p);}snapshotPlayer();snapCamera(player.x,player.y);interpolatePlayer();}streamWorld(true);resize();if(progress.mode!=='train'&&!powerActive('phase')&&!clearSpot(player))recover();rebuildDynamic();updateHUD();updatePoliceHUD();drawMini();requestAnimationFrame(loop);
 // Opt-in local diagnostics; not enabled during normal play.
-if(new URLSearchParams(location.search).has('test'))window.cityTest={railway,sceneryCache,railTrackOpacity,railPaintVehicle,railDrawTrainLights,railNode,railGeometry,railStation,railPiecesIn,railSample,railPlan,railPath,railEnsure,railMakeTrain,railNearest,railEnter,railCreateOffer,railCleanJob,railUpdateJob,railUpdateNavigation,railSpawnNPC,railCarriages,railAtStop,railRestore,railRefreshWorld,railFindStation,railSetDestination,railReservationsForArea,railReserved,railIntervals,railClearance,railReserveTrains,railUpdatePlayer,railUpdateNPC,railJobDistance,railPoint,railNext,railLength,railOnBridge,railSetManualTurn,railApplyManualTurn,railUpcomingJunction,railTravelDirection,railChoicePort,railJunctionHint,railDrawUpperLayer,trafficJunctions,updateTrafficJunctions,refreshTrafficJunctions,trafficRearLimit,GAME_MODES,MODE_ORDER,JOB_MODES,service,jobNavigation:routeNavigation,modeVehicle,setGameMode,cycleGameMode,currentJob,currentOffer,jobTarget,createJobOffer,ensureJobOffer,acceptJob,changeJobOffer,get raceRun(){return raceRun},get raceCars(){return raceCars},racePosition,createRaceOffer,abandonRace,RACE_REWARD_KM,JOB_BANDS,JOB_ROUTE_COLOR,jobLengthKm,jobLegKm,updateJob,finishJobStop,cityJobType,findJobSite,streetSite,nearbyRoadStops,cleanJob,updateModeHUD,renderModeMenu,showJobMap,OLD_TOWNS,AIRPORTS,AIRCRAFT,oldTownStyle,airportKind,dressBuilding,drawBuilding,drawAircraft,SPEED_KMH,speedKmh,VEHICLE_TYPES,TRAFFIC_MIX,highwayRoute,refillTraffic,routeAt,projectRoute,updateTraffic,senseTraffic,MAX_POLICE,POLICE_ROLES,POWER_TYPES,powers,pickups,pickupState,powerActive,ghosting,activatePower,tickPowers,finishGhostExit,spawnPickup,updatePickups,ignoresCollision,maintainPursuit,spawnPoliceUnit,policeTarget,nearDrivingView,protectVisibleVehicle,regionType,featureAt,getScene,sceneCache,activeScenes,navigation,gridEdge,nearestDriveRoad,navigationPath,surfaceAt,findLandscape,exploration,roadAnchors,CATEGORIES,GARAGE_CATEGORIES,GARAGE_VEHICLES,garageKindForMode,garageState,UPGRADES,appearance,tryOn,paintVehicle,generateBlock,worldHash,worldWindow,chunks,previewChunks,roadCoord,roadHalf,roadIndex,streamWorld,insideLoaded,obstacles,staticHash,dynamicHash,mapView,police,policeState,setPoliceEnabled,deployPolice,planPolice,segmentClear,updatePolice,updatePlayer,progress,turbo,stats,earnDistance,purchase,balanceMm,saveProgress,renderGarage,applyBuild,SAVE_KEY,player,traffic,parked,buildings,boundaries,blocks,keys,xs,ys,contact,physics,recover,clearSpot,closestRoad,onGrass,start,openModal,closeModal,rebuildDynamic,updateHUD,draw,drawAtlas,clearKeys,get state(){return {started,activeModal,simTime,distance,camera:{...camera},world:{infinite:true,loaded:chunks.size,preview:previewChunks.size,generated:worldWindow.generated,center:{i:worldWindow.i,j:worldWindow.j},radius:worldWindow.radius},counts:{blocks:blocks.length,buildings:buildings.length,traffic:traffic.length,parked:parked.length}};}};
+if(new URLSearchParams(location.search).has('test'))window.cityTest={railway,sceneryCache,railTrackOpacity,railPaintVehicle,railDrawTrainLights,railNode,railGeometry,railStation,railPiecesIn,railSample,railPlan,railPath,railEnsure,railMakeTrain,railNearest,railEnter,railCreateOffer,railCleanJob,railUpdateJob,railUpdateNavigation,railSpawnNPC,railCarriages,railAtStop,railRestore,railRefreshWorld,railFindStation,railSetDestination,railReservationsForArea,railReserved,railIntervals,railClearance,railReserveTrains,railUpdatePlayer,railUpdateNPC,railJobDistance,railPoint,railNext,railLength,railOnBridge,railSetManualTurn,railApplyManualTurn,railUpcomingJunction,railTravelDirection,railChoicePort,railJunctionHint,railDrawUpperLayer,trafficJunctions,updateTrafficJunctions,refreshTrafficJunctions,trafficRearLimit,GAME_MODES,MODE_ORDER,JOB_MODES,service,jobNavigation:routeNavigation,modeVehicle,setGameMode,cycleGameMode,currentJob,currentOffer,jobTarget,createJobOffer,ensureJobOffer,acceptJob,changeJobOffer,get raceRun(){return raceRun},get raceCars(){return raceCars},racePosition,createRaceOffer,abandonRace,RACE_REWARD_KM,JOB_BANDS,JOB_ROUTE_COLOR,jobLengthKm,jobLegKm,updateJob,finishJobStop,cityJobType,findJobSite,streetSite,nearbyRoadStops,cleanJob,updateModeHUD,renderModeMenu,showJobMap,OLD_TOWNS,AIRPORTS,AIRCRAFT,oldTownStyle,airportKind,dressBuilding,drawBuilding,drawAircraft,SPEED_KMH,speedKmh,VEHICLE_TYPES,TRAFFIC_MIX,highwayRoute,refillTraffic,routeAt,projectRoute,updateTraffic,senseTraffic,MAX_POLICE,POLICE_ROLES,POWER_TYPES,powers,pickups,pickupState,powerActive,ghosting,activatePower,tickPowers,finishGhostExit,spawnPickup,updatePickups,ignoresCollision,maintainPursuit,spawnPoliceUnit,policeTarget,nearDrivingView,protectVisibleVehicle,regionType,featureAt,getScene,sceneCache,activeScenes,navigation,gridEdge,nearestDriveRoad,navigationPath,surfaceAt,findLandscape,exploration,roadAnchors,CATEGORIES,GARAGE_CATEGORIES,GARAGE_VEHICLES,garageKindForMode,garageState,UPGRADES,appearance,tryOn,paintVehicle,generateBlock,worldHash,worldWindow,chunks,previewChunks,roadCoord,roadHalf,roadIndex,streamWorld,insideLoaded,obstacles,staticHash,dynamicHash,mapView,police,policeState,pursuitOn,clearPursuit,isFreeRoam,deployPolice,planPolice,segmentClear,updatePolice,updatePlayer,progress,turbo,stats,earnDistance,purchase,balanceMm,saveProgress,renderGarage,applyBuild,SAVE_KEY,player,traffic,parked,buildings,boundaries,blocks,keys,xs,ys,contact,physics,recover,clearSpot,closestRoad,onGrass,start,openModal,closeModal,rebuildDynamic,updateHUD,draw,drawAtlas,clearKeys,get state(){return {started,activeModal,simTime,distance,camera:{...camera},world:{infinite:true,loaded:chunks.size,preview:previewChunks.size,generated:worldWindow.generated,center:{i:worldWindow.i,j:worldWindow.j},radius:worldWindow.radius},counts:{blocks:blocks.length,buildings:buildings.length,traffic:traffic.length,parked:parked.length}};}};
 })();
 </script>
 </body>
