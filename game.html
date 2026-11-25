@@ -5403,7 +5403,7 @@ function interpolatePlayer(){
 let started=false,activeModal=null,previousFocus=null,simTime=0,distance=progress.earnedMm/1000,last=performance.now(),accumulator=0,hudClock=0,toastTimer=0,shake=0,impactCooldown=0;
 const keys=Object.create(null);
 
-const PAD={confirm:0,back:1,brake:2,recover:3,garage:4,boost:5,reverse:6,accelerate:7,map:8,pause:9,help:10,trophies:11,up:12,down:13,left:14,right:15};
+const PAD={confirm:0,back:1,brake:5,recover:3,garage:4,boost:2,reverse:6,accelerate:7,map:8,pause:9,help:10,trophies:11,up:12,down:13,left:14,right:15};
 const PAD_LABELS={
  xbox:['A','B','X','Y','LB','RB','LT','RT','View','Menu','LS Click','RS Click'],
  playstation:['✕','○','□','△','L1','R1','L2','R2','Create / Share','Options','L3','R3'],
@@ -7153,7 +7153,6 @@ function collapseHouse(house){
  }
  if(particles.length>256)particles.splice(0,particles.length-256);
  playGameSound('explosion',1);shake=Math.max(shake,4.5);
- toast('Crumbling house demolished.');
 }
 function resolveNightSpeederCrash(a,b,hit){
  const aSpeeder=nightSpeeder(a),bSpeeder=nightSpeeder(b);
