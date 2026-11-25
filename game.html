@@ -110,6 +110,16 @@ body.hemp-playing .vignette{background:rgba(79,158,73,.12)}
 .trophy-section-heading h3{font-size:15px;margin:0;color:#eff1da}
 .trophy-section-heading span,.trophy-empty{font-size:11px;color:#c1d0bc}
 .trophy-empty{margin:0}
+.trophy-tabs{display:flex;gap:6px;margin-bottom:10px}
+.trophy-tabs button{flex:1;padding:9px 10px;border:1px solid #e4c97840;border-radius:9px;background:#1b3a30;color:#cdd9c5;font-weight:700;font-size:13px}
+.trophy-tabs button[aria-selected="true"]{background:#efd28a;color:#213026;border-color:#efd28a}
+.business-list{display:grid;gap:7px}
+#businessList .business-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;justify-items:start;gap:12px;width:100%;min-height:0;padding:10px 14px;text-align:left}
+#businessList .business-row .business-icon{width:44px;height:44px;margin:0}
+#businessList .business-row .business-main{justify-self:stretch;min-width:0}
+#businessList .business-row .trophy-item-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;justify-self:end;text-align:right;white-space:nowrap}
+.business-main{display:grid;gap:3px;min-width:0}
+.business-rate{font-size:11px;color:#bccfc0}
 .trophy-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
 .trophy-item{position:relative;display:grid;gap:4px;justify-items:center;align-content:center;min-width:0;min-height:116px;padding:8px;color:#e9f0dd;background:#223e34;border:1px solid #c1d4b935;border-radius:10px;text-align:center}
 .trophy-item canvas{display:block;width:88px;height:60px;max-width:100%;object-fit:contain}
@@ -258,10 +268,15 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
  <section class="dialog trophy-dialog" id="trophyDialog" role="dialog" aria-modal="true" aria-labelledby="trophyTitle">
   <button class="iconbtn close" data-close aria-label="Close Trophy Room">×</button>
   <header class="trophy-head">
-   <div><h2 id="trophyTitle">Trophy Room</h2><p>Spend your KMs on cosmetic collectibles.</p></div>
+   <div><h2 id="trophyTitle">Trophy Room</h2><p>Spend your KMs on collectibles and businesses that earn KM over time.</p></div>
    <div class="trophy-bank"><span>Available balance</span><strong id="trophyBalance">0 KM</strong></div>
   </header>
+  <div class="trophy-tabs" id="trophyTabs" role="tablist" aria-label="Trophy Room sections">
+   <button type="button" role="tab" id="trophyTabTrophies" aria-selected="true" aria-controls="trophyPanel" data-trophy-tab="trophies">Trophies</button>
+   <button type="button" role="tab" id="trophyTabBusinesses" aria-selected="false" aria-controls="businessPanel" data-trophy-tab="businesses">Businesses</button>
+  </div>
   <p class="trophy-feedback" id="trophyFeedback" role="status"></p>
+  <div id="trophyPanel" role="tabpanel" aria-labelledby="trophyTabTrophies">
   <section class="trophy-shelf" aria-labelledby="trophyOwnedTitle">
    <div class="trophy-section-heading"><h3 id="trophyOwnedTitle">Owned</h3><span id="trophySpent"></span></div>
    <p class="trophy-empty" id="trophyEmpty">Your purchased trophies appear here.</p>
@@ -271,6 +286,17 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
    <div class="trophy-section-heading"><h3 id="trophyShopTitle">Shop</h3><span id="trophyRemaining"></span></div>
    <div class="trophy-grid" id="trophyShop"></div>
   </section>
+  </div>
+  <div id="businessPanel" role="tabpanel" aria-labelledby="trophyTabBusinesses" hidden>
+   <section class="trophy-shelf" aria-labelledby="businessIncomeTitle">
+    <div class="trophy-section-heading"><h3 id="businessIncomeTitle">Income</h3><span id="businessIncome"></span></div>
+    <p class="trophy-empty" id="businessEmpty">Buy a business to start earning KM every second.</p>
+   </section>
+   <section aria-labelledby="businessShopTitle">
+    <div class="trophy-section-heading"><h3 id="businessShopTitle">Businesses</h3><span id="businessRemaining"></span></div>
+    <div class="business-list" id="businessList"></div>
+   </section>
+  </div>
  </section>
  <div class="trophy-confirm-cover" id="trophyConfirmation" hidden>
   <section class="dialog trophy-confirm" role="dialog" aria-modal="true" aria-labelledby="trophyConfirmTitle" aria-describedby="trophyConfirmCopy">
@@ -4445,6 +4471,21 @@ function railSetDestination(x,y){
 const player={...makeCar(roadCoord(5,0)+160,roadCoord(4,1)+LANE,0,'#e8e8cd','player'),invMass:1.2};
 const SAVE_KEY='open-city.garage.v1';
 const WORLD_LAYOUT_VERSION=26;
+// Prices are in KM; kmps is the passive income in KM per second once owned.
+const BUSINESSES=[
+ {id:'post-office',name:'Post Office',price:500,kmps:1},
+ {id:'bakery',name:'Bakery',price:3000,kmps:5},
+ {id:'grocery-store',name:'Grocery Store',price:12000,kmps:18},
+ {id:'gas-station',name:'Gas Station',price:45000,kmps:60},
+ {id:'car-dealership',name:'Car Dealership',price:150000,kmps:200},
+ {id:'logistics-depot',name:'Logistics Depot',price:500000,kmps:650},
+ {id:'oil-field',name:'Oil Field',price:1800000,kmps:2200},
+ {id:'airport',name:'Airport',price:6000000,kmps:7000},
+ {id:'shipping-port',name:'Shipping Port',price:20000000,kmps:22000},
+ {id:'major-corporation',name:'Major Corporation',price:75000000,kmps:80000},
+ {id:'orbital-launch',name:'Orbital Launch Company',price:300000000,kmps:300000},
+ {id:'sovereign-fund',name:'Sovereign Wealth Fund',price:1500000000,kmps:1400000}
+];
 const TROPHIES=[
  {id:'gold-bar',name:'Gold bar',price:2500},
  {id:'gold-stack',name:'Gold bar stack',price:8000},
@@ -4888,7 +4929,7 @@ function cleanAdminSettings(raw){
   npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,musicVolume,soundVolume
  };
 }
-function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
+function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],ownedBusinesses:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
 function cleanProgress(p){
  if(!p||p.version!==1||!Number.isSafeInteger(p.earnedMm)||p.earnedMm<0||!Number.isSafeInteger(p.spentMm)||p.spentMm<0||p.spentMm>p.earnedMm)return null;
  const clean=freshProgress();clean.admin=cleanAdminSettings(p.admin);clean.earnedMm=p.earnedMm;clean.spentMm=p.spentMm;
@@ -4897,6 +4938,8 @@ function cleanProgress(p){
  clean.mode=Object.hasOwn(GAME_MODES,p.mode)?p.mode:'free';clean.policeEnabled=legacyPolice&&clean.mode==='free';
  const owned=new Set(Array.isArray(p.ownedTrophies)?p.ownedTrophies:[]);
  clean.ownedTrophies=TROPHIES.filter(item=>owned.has(item.id)).map(item=>item.id);
+ const ownedBusinesses=new Set(Array.isArray(p.ownedBusinesses)?p.ownedBusinesses:[]);
+ clean.ownedBusinesses=BUSINESSES.filter(item=>ownedBusinesses.has(item.id)).map(item=>item.id);
  clean.jobSerial=Number.isSafeInteger(p.jobSerial)&&p.jobSerial>=0?p.jobSerial:0;
  const savedLayout=Number.isInteger(p.worldVersion)?p.worldVersion:0;
  for(const mode of JOB_MODES){
@@ -5138,9 +5181,52 @@ function renderTrophyRoom(){
  $('trophyRemaining').textContent=available.length?available.length+' remaining':'Collection complete';
  $('trophyOwned').innerHTML=owned.map(item=>trophyCard(item,true)).join('');
  $('trophyShop').innerHTML=available.map(item=>trophyCard(item,false)).join('');
+ renderBusinessRoom();
  for(const card of $('trophyDialog').querySelectorAll('[data-trophy-buy],[data-trophy-owned]')){
   drawTrophyIcon(card.querySelector('canvas').getContext('2d'),card.dataset.trophyBuy||card.dataset.trophyOwned);
  }
+}
+function trophyKmps(rate){return trophyKmFormat.format(rate)+' KM/s';}
+const BUSINESS_ACCENTS=['#e4c978','#c97a5a','#8fb36b','#d9a441','#6fa3c7','#b37fc9','#e07b7b','#7fc9b8','#c9b26b','#9aa8d9','#d98a3a','#f1d992'];
+// Small flat-shaded storefront. Taller buildings for later tiers, with the accent colour on the awning.
+function drawBusinessIcon(canvas,index){
+ const g=canvas.getContext('2d'),size=canvas.width;g.clearRect(0,0,size,size);
+ const accent=BUSINESS_ACCENTS[index%BUSINESS_ACCENTS.length],wallH=12+Math.min(index,11)*1.6;
+ const x=8,width=28,base=40,top=base-wallH;
+ g.fillStyle='#16302a';g.beginPath();g.roundRect(0,0,size,size,8);g.fill();
+ g.fillStyle='#4d6b5c';g.fillRect(4,base,36,2);
+ g.fillStyle='#d9d2bd';g.fillRect(x,top,width,wallH);
+ g.fillStyle='#7d4f36';g.fillRect(x-2,top-3,width+4,3);
+ g.fillStyle=accent;g.fillRect(x+2,top+2,width-4,4);
+ if(wallH>=20){
+  g.fillStyle='#8fb7c4';g.fillRect(x+4,top+8,6,4);g.fillRect(x+width-10,top+8,6,4);
+ }
+ g.fillStyle='#4b3a2c';g.fillRect(x+width/2-3,base-7,6,7);
+}
+function businessRow(item,owned){
+ const affordableNow=affordable(item.price),state=owned?'owned':affordableNow?'available':'locked';
+ const tag=owned?'article':'button';
+ const controls=owned?'tabindex="-1" data-business-owned':'type="button" data-business-buy';
+ return '<'+tag+' class="trophy-item business-row" data-state="'+state+'" '+controls+'="'+item.id+'">'+
+  '<canvas class="business-icon" width="44" height="44" aria-hidden="true"></canvas>'+
+  '<span class="business-main"><strong class="trophy-name">'+item.name+'</strong>'+
+  '<span class="business-rate">'+trophyKmps(item.kmps)+'</span></span>'+
+  '<span class="trophy-item-meta"><span class="trophy-price">'+trophyKm(item.price)+'</span>'+
+  '<span class="trophy-state">'+(owned?'Earning':affordableNow?'Available':'Locked')+'</span></span></'+tag+'>';
+}
+function renderBusinessRoom(){
+ const ownedCount=progress.ownedBusinesses.length;
+ $('businessIncome').textContent=trophyKmps(businessKmps());
+ $('businessEmpty').hidden=ownedCount>0;
+ $('businessRemaining').textContent=ownedCount<BUSINESSES.length?(BUSINESSES.length-ownedCount)+' to buy':'All businesses owned';
+ $('businessList').innerHTML=BUSINESSES.map(item=>businessRow(item,progress.ownedBusinesses.includes(item.id))).join('');
+ [...$('businessList').querySelectorAll('canvas')].forEach((canvas,index)=>drawBusinessIcon(canvas,index));
+}
+function setTrophyTab(tab){
+ const businesses=tab==='businesses';
+ for(const button of $('trophyTabs').querySelectorAll('[data-trophy-tab]'))button.setAttribute('aria-selected',String((button.dataset.trophyTab==='businesses')===businesses));
+ $('trophyPanel').hidden=businesses;$('businessPanel').hidden=!businesses;
+ $('trophyFeedback').textContent='';$('trophyDialog').scrollTop=0;
 }
 function showTrophyShortfall(item,card){
  const remaining=Math.ceil((Math.round(item.price*1000000)-balanceMm())/10000)/100;
@@ -5149,12 +5235,15 @@ function showTrophyShortfall(item,card){
  card.classList.remove('trophy-shake');void card.offsetWidth;card.classList.add('trophy-shake');
  $('trophyFeedback').textContent=item.name+' · '+message;
 }
+function purchaseCatalog(kind){return kind==='business'?BUSINESSES:TROPHIES;}
+function purchaseOwned(kind){return kind==='business'?progress.ownedBusinesses:progress.ownedTrophies;}
 function requestTrophyPurchase(card){
  if(activeModal!=='trophyModal'||trophyPending)return;
- const item=TROPHIES.find(entry=>entry.id===card.dataset.trophyBuy);
- if(!item||progress.ownedTrophies.includes(item.id))return;
+ const kind=card.dataset.businessBuy!==undefined?'business':'trophy',id=kind==='business'?card.dataset.businessBuy:card.dataset.trophyBuy;
+ const item=purchaseCatalog(kind).find(entry=>entry.id===id);
+ if(!item||purchaseOwned(kind).includes(item.id))return;
  if(!affordable(item.price)){showTrophyShortfall(item,card);return;}
- trophyPending={item,card};
+ trophyPending={item,card,kind};
  $('trophyConfirmCopy').textContent='Buy '+item.name+' for '+trophyKm(item.price)+'? Purchases are final.';
  $('trophyDialog').inert=true;
  $('trophyConfirmation').hidden=false;
@@ -5170,23 +5259,24 @@ function dismissTrophyConfirmation(restoreFocus=false){
 }
 function confirmTrophyPurchase(){
  if(activeModal!=='trophyModal'||!trophyPending)return false;
- const {item,card}=trophyPending;
+ const {item,card,kind}=trophyPending;
  dismissTrophyConfirmation(true);
- if(progress.ownedTrophies.includes(item.id))return false;
+ const owned=purchaseOwned(kind);
+ if(owned.includes(item.id))return false;
  if(!affordable(item.price)){showTrophyShortfall(item,card);return false;}
  const cost=Math.round(item.price*1000000);
- progress.spentMm+=cost;progress.ownedTrophies.push(item.id);
+ progress.spentMm+=cost;owned.push(item.id);
  progressDirty=true;saveProgress();
  if(!savingAvailable){
   // Commit ownership and the wallet debit together, or leave both as they were.
-  progress.spentMm-=cost;progress.ownedTrophies.pop();
+  progress.spentMm-=cost;owned.pop();
   $('trophyFeedback').textContent='Could not save the purchase. Try again when browser storage is available.';
   return false;
  }
  $('wallet').textContent=kmText(balanceMm())+' km';
  renderTrophyRoom();
- $('trophyFeedback').textContent=item.name+' added to your collection.';
- const award=$('trophyOwned').querySelector('[data-trophy-owned="'+item.id+'"]');
+ $('trophyFeedback').textContent=kind==='business'?item.name+' bought. It now earns '+trophyKmps(item.kmps)+'.':item.name+' added to your collection.';
+ const award=$('trophyDialog').querySelector('[data-'+(kind==='business'?'business':'trophy')+'-owned="'+item.id+'"]');
  if(award){
   award.classList.add('trophy-awarded');
   award.focus();
@@ -5305,6 +5395,16 @@ function earnDistance(metres){
  if(!Number.isFinite(metres)||metres<=0)return;
  const amount=metres*1000+distanceRemainder,whole=Math.floor(amount);distanceRemainder=amount-whole;
  progress.earnedMm=Math.min(Number.MAX_SAFE_INTEGER,progress.earnedMm+whole);distance=progress.earnedMm/1000;progressDirty=true;
+}
+// Passive income: owned businesses add KM while the game is running (not paused or in a menu).
+let businessRemainder=0;
+function businessKmps(){return progress.ownedBusinesses.reduce((sum,id)=>sum+(BUSINESSES.find(item=>item.id===id)?.kmps||0),0);}
+function earnBusinessIncome(elapsedMs){
+ const rate=businessKmps();if(rate<=0||!(elapsedMs>0))return;
+ // 1 KM/s is 1,000 millionths of a KM per millisecond, so keep the fractional remainder between frames.
+ const amount=rate*1000*elapsedMs+businessRemainder,whole=Math.floor(amount);businessRemainder=amount-whole;
+ if(whole<=0)return;
+ progress.earnedMm=Math.min(Number.MAX_SAFE_INTEGER,progress.earnedMm+whole);progressDirty=true;
 }
 function appearance(build=garageState(),kind=garageKindForMode()){
  const categories=garageCategories(kind);return {paint:categories.paint.items.find(p=>p.id===build.paint)||categories.paint.items[0],livery:build.livery,wheels:categories.wheels?(categories.wheels.items.find(p=>p.id===build.wheels)||categories.wheels.items[0]):null,lighting:categories.lighting?(categories.lighting.items.find(p=>p.id===build.lighting)||categories.lighting.items[0]):null,details:build.equippedDetails};
@@ -6776,6 +6876,14 @@ $('trophyBtn').onclick=()=>openModal('trophyModal');
 $('trophyShop').addEventListener('click',e=>{
  const card=e.target.closest('[data-trophy-buy]');
  if(card)requestTrophyPurchase(card);
+});
+$('businessList').addEventListener('click',e=>{
+ const card=e.target.closest('[data-business-buy]');
+ if(card)requestTrophyPurchase(card);
+});
+$('trophyTabs').addEventListener('click',e=>{
+ const tab=e.target.closest('[data-trophy-tab]');
+ if(tab)setTrophyTab(tab.dataset.trophyTab);
 });
 $('trophyCancel').onclick=()=>dismissTrophyConfirmation(true);
 $('trophyBuy').onclick=confirmTrophyPurchase;
@@ -11524,6 +11632,7 @@ function loop(now){
    followCamera(renderedPlayer.x+vx*140,renderedPlayer.y+vy*140,elapsed);
   }
  }
+ if(running&&started)earnBusinessIncome(elapsed);
  updateDrivingAudio(now);
  shake*=Math.pow(.88,elapsed/16);
  if(!document.hidden&&(!activeModal||!sceneryCache.valid)){
