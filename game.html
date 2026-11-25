@@ -355,6 +355,7 @@ const xs=[],ys=[],blocks=[],buildings=[],obstacles=[],trees=[],parked=[],traffic
 let vehicleRemovalPending=false;
 // Weathered old-town houses the player has demolished, keyed by their lot position.
 const ruinedHouses=new Set();
+const brokenProps=new Set();
 const chunks=new Map(),previewChunks=new Map(),preparedChunks=new Map(),preparedScenes=new Map();
 let pendingChunks=[],chunkPreparationQueued=false,worldPreparation=null;
 const worldWindow={i:NaN,j:NaN,radius:3,bounds:{},generation:0,maxLoaded:0,generated:0};
@@ -1995,7 +1996,7 @@ function varyOldTown(s,plaza,away,occupied){
   const q={x,y,hw:turn?h:w,hh:turn?w:h};
   if(x-q.hw<left+10||x+q.hw>right-10||y-q.hh<top+10||y+q.hh>bottom-10)continue;
   if(!away(q,10)||occupied(q)||s.trees.some(t=>Math.hypot(t.x-x,t.y-y)<t.r+Math.max(q.hw,q.hh)+4))continue;
-  const o={...q,angle:0,vx:0,vy:0,invMass:0,kind:'oldProp',prop,turn,tone:worldHash(i,j,1525)};
+  const o={...q,angle:0,vx:0,vy:0,invMass:0,kind:'oldProp',prop,turn,tone:worldHash(i,j,1525),destroyed:brokenProps.has(Math.round(x)+','+Math.round(y))};
   s.obstacles.push(o);s.decor.push(o);
  }
 }
@@ -4942,7 +4943,7 @@ function cleanAdminSettings(raw){
   npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,musicVolume,soundVolume
  };
 }
-function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],ownedBusinesses:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
+function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],ownedBusinesses:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],brokenProps:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
 function cleanProgress(p){
  if(!p||p.version!==1||!Number.isSafeInteger(p.earnedMm)||p.earnedMm<0||!Number.isSafeInteger(p.spentMm)||p.spentMm<0||p.spentMm>p.earnedMm)return null;
  const clean=freshProgress();clean.admin=cleanAdminSettings(p.admin);clean.earnedMm=p.earnedMm;clean.spentMm=p.spentMm;
@@ -4970,6 +4971,7 @@ function cleanProgress(p){
  clean.railPosition=p.railPosition||null;
  clean.ride=['car','bike','tractor'].includes(p.ride)?p.ride:'car';
  clean.ruins=Array.isArray(p.ruins)?p.ruins.filter(k=>typeof k==='string'&&/^-?\d{1,9},-?\d{1,9}$/.test(k)).slice(-300):[];
+clean.brokenProps=Array.isArray(p.brokenProps)?p.brokenProps.filter(k=>typeof k==='string'&&/^-?\d{1,9},-?\d{1,9}$/.test(k)).slice(-600):[];
  if(savedLayout<WORLD_LAYOUT_VERSION)clean.previousRailPosition=clean.position;
  if(p.garageVersion===1&&p.garages&&typeof p.garages==='object')for(const kind of Object.keys(GARAGE_VEHICLES))clean.garages[kind]=cleanGarage(p.garages[kind],kind);
  else clean.garages.car=cleanGarage(p,'car',true);
@@ -4983,8 +4985,9 @@ function loadProgress(){
 }
 const progress=loadProgress();
 for(const key of progress.ruins)ruinedHouses.add(key);
+for(const key of progress.brokenProps)brokenProps.add(key);
 // Scenes generated while validating the save were built before the ruins were known.
-if(ruinedHouses.size){sceneCache.clear();previewChunks.clear();}
+if(ruinedHouses.size||brokenProps.size){sceneCache.clear();previewChunks.clear();}
 const turbo={charge:1,active:false,depleted:false,rechargeDelay:0};
 function updateTurbo(dt,st,wantsBoost,infiniteNitro){
  turbo.active=!!(wantsBoost&&(infiniteNitro||turbo.charge>0&&!turbo.depleted));
@@ -7321,6 +7324,10 @@ function invalidateRoofTiles(l,t,r,b){
  for(const cache of [sceneryCache,sceneryCache.pending])if(cache)for(const tile of cache.tiles.values())
   if(tile.r>=l&&tile.l<=r&&tile.b>=t&&tile.t<=b)tile.roof=undefined;
 }
+function invalidateGroundTiles(l,t,r,b){
+ for(const cache of [sceneryCache,sceneryCache.pending])if(cache)for(const tile of cache.tiles.values())
+  if(tile.r>=l&&tile.l<=r&&tile.b>=t&&tile.t<=b){tile.ground=undefined;tile.night=undefined;}
+}
 function collapseHouse(house){
  if(house.destroyed)return;
  const {x,y,hw,hh}=house,colors=[house.roofTone,house.facade,'#8b765f','#6a6254','#b9a889'];
@@ -7337,6 +7344,20 @@ function collapseHouse(house){
  }
  if(particles.length>256)particles.splice(0,particles.length-256);
  playGameSound('explosion',1);shake=Math.max(shake,4.5);
+}
+function breakOldProp(d){
+ if(d.destroyed)return;
+ d.destroyed=true;brokenProps.add(Math.round(d.x)+','+Math.round(d.y));progress.brokenProps=[...brokenProps].slice(-600);progressDirty=true;queueProgressSave();
+ invalidateGroundTiles(d.x-d.hw-6,d.y-d.hh-6,d.x+d.hw+6,d.y+d.hh+6);minimapView.cachedRegion=null;
+ explosions.push({x:d.x,y:d.y,age:0});if(explosions.length>12)explosions.shift();
+ const colors=['#9b7b55','#7a5f40','#d8c27a','#8a6a4c','#5a4a3a',d.tone>.5?'#a86a4c':'#a89e88'];
+ for(let n=0;n<16;n++){
+  const angle=random()*TAU,speed=.05+random()*.16,debris=n<8;
+  particles.push({x:d.x+(random()-.5)*d.hw,y:d.y+(random()-.5)*d.hh,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+   life:debris?500+random()*300:300+random()*250,color:debris?colors[n%colors.length]:n%2?'#ffe2a0':'#cfc4a8',size:debris?2.5+random()*3:2+random()*2});
+ }
+ if(particles.length>256)particles.splice(0,particles.length-256);
+ playGameSound('explosion',.45);shake=Math.max(shake,2.5);
 }
 function resolveNightSpeederCrash(a,b,hit){
  const aSpeeder=nightSpeeder(a),bSpeeder=nightSpeeder(b);
@@ -7408,6 +7429,7 @@ function resolve(a,b,hit){
  const {nx,ny,depth}=hit;
  const rvx=b.vx-a.vx,rvy=b.vy-a.vy,relative=rvx*nx+rvy*ny;
  if(target?.role==='weatheredHouse'&&-relative>.06){collapseHouse(target);player.vx*=.55;player.vy*=.55;return;}
+ if(target?.kind==='oldProp'&&!target.destroyed&&-relative>.04){breakOldProp(target);player.vx*=.7;player.vy*=.7;return;}
  if(turbo.active&&target&&destroyVehicle(target,true)){recordJobTakedown();return;}
  if(resolveNightSpeederCrash(a,b,hit))return;
  if(started&&target&&relative<-.055)playGameSound('impact',clamp(-relative/.38,.35,1));
@@ -8966,7 +8988,7 @@ function drawSceneDetails(s){
   }
   if(d.kind==='motelCourt'&&visible(d.x,d.y,d.hw+5,d.hh+5))drawMotelCourt(d);
   if(d.kind==='oldGarden'&&visible(d.x,d.y,d.hw+3,d.hh+3))drawOldGarden(d);
-  if(d.kind==='oldProp'&&visible(d.x,d.y,d.hw+6,d.hh+6))drawOldProp(d,s.town);
+  if(d.kind==='oldProp'&&!d.destroyed&&visible(d.x,d.y,d.hw+6,d.hh+6))drawOldProp(d,s.town);
   if(d.kind==='oldplaza'&&visible(d.x,d.y,100)){
    drawOldTownMosaic(s.town,d.x,d.y);
    circle(d.x,d.y,53,s.town.ground);ctx.strokeStyle=s.town.street;ctx.lineWidth=3;ctx.beginPath();ctx.arc(d.x,d.y,65,0,TAU);ctx.stroke();
