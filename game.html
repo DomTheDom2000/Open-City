@@ -4738,6 +4738,8 @@ function cleanDrivingReward(mode,job){return jobBaseReward(mode,job)*job.cleanDr
 function takedownReward(mode,job){return jobBaseReward(mode,job)*job.takedowns*TAKEDOWN_BONUS_PERCENT/100;}
 // KM follow the existing distance-earned scale (0.8 metres per world unit).
 const JOB_BANDS=[{name:'Regional',min:8,max:14,weight:.50},{name:'Long haul',min:20,max:40,weight:.38},{name:'Cross-country',min:60,max:100,weight:.12}];
+// Trucks use the same distance ranges as buses, but favour longer hauls. Bus and other jobs keep JOB_BANDS.
+const TRUCK_JOB_BANDS=[{name:'Regional',min:8,max:14,weight:.10},{name:'Long haul',min:20,max:40,weight:.60},{name:'Cross-country',min:60,max:100,weight:.30}];
 const RIDE_BANDS=[{min:2,max:5,weight:.60},{min:5,max:12,weight:.25},{min:12,max:20,weight:.15,anchorInset:.025}];
 const STALE_OFFER_PICKUP_KM=20;
 const SCENIC_JOB_INTERVAL=4,SCENIC_JOB_AREAS=['offroad','oldtown','park','industrial','residential','commercial'];
@@ -5585,6 +5587,9 @@ function pollGamepads(now,elapsed){
  if(chosen.index!==gamepad.index)gamepad.menuDirection='';
  gamepad.index=chosen.index;
  if(activity)setInputDevice('gamepad',gamepadLayout(chosen.id));
+ // Browsers only allow sound after a keyboard, mouse or touch gesture, so a gamepad press
+ // must also unlock audio and retry the music, as those inputs do.
+ if(chosen.edges){unlockGameAudio();retryMusic();}
  const pressed=name=>!!(chosen.edges&(1<<PAD[name]));
  if(activeModal){useGamepadMenu(chosen,pressed,now,elapsed);return;}
  gamepad.menuDirection='';
@@ -5596,7 +5601,8 @@ function pollGamepads(now,elapsed){
  if(pressed('up')){openModal('modeModal');return;}
  if(pressed('down')){cycleGameMode();return;}
  if(pressed('confirm')){if(started)acceptJob();else start();}
- if(!started)return;
+ // Before the game has started, accelerate also dismisses the start menu and starts driving.
+ if(!started){if(pressed('accelerate'))start();return;}
  if(pressed('recover')){recover();resetGamepadDrive();return;}
  if(pressed('back')&&!jobTarget())changeJobOffer();
  const held=name=>!!(chosen.buttons&(1<<PAD[name]));
@@ -5943,7 +5949,7 @@ function scenicDestination(area,origin,band,bands,mode,action,pickAnchor){
  return null;
 }
 function distantJobStop(kind,origin,rng,heading,mode,scenicArea){
- const bands=kind==='dropoff'?RIDE_BANDS:JOB_BANDS;
+ const bands=kind==='dropoff'?RIDE_BANDS:mode==='truck'?TRUCK_JOB_BANDS:JOB_BANDS;
  let roll=rng(),band=bands.at(-1);for(const option of bands){roll-=option.weight;if(roll<0){band=option;break;}}
  const pickAnchor=(range=band)=>{
   const inset=range.anchorInset??.15;
@@ -5955,6 +5961,20 @@ function distantJobStop(kind,origin,rng,heading,mode,scenicArea){
  if(scenicArea){
   const stop=scenicDestination(scenicArea,origin,band,bands,mode,kind,pickAnchor);
   if(stop)return stop;
+ }
+ // Truck drop-offs otherwise only search shops, which are almost always in town.
+ // Some trucks head to industrial yards or nature/farm land instead. Distance bands are unchanged,
+ // and if no scenic spot fits, the normal shop search below still runs.
+ if(kind==='store'&&mode==='truck'){
+  const TRUCK_DROP_MIX=[{area:'store',weight:.4},{area:'industrial',weight:.3},{area:'offroad',weight:.3}];
+  let roll=rng(),area='store';
+  for(const option of TRUCK_DROP_MIX){roll-=option.weight;if(roll<0){area=option.area;break;}}
+  if(area!=='store'){
+   for(let attempt=0;attempt<4;attempt++){
+    const stop=scenicJobStop(area,pickAnchor(band),origin,band,mode,kind);
+    if(stop)return stop;
+   }
+  }
  }
  for(let attempt=0;attempt<20;attempt++){
   const anchor=pickAnchor();
@@ -10328,7 +10348,8 @@ function createUnderglowTextures(){
  return {mask,light,width,height,color:null};
 }
 function drawNightUnderglow(){
- if(player.model!=='sedan'&&player.model!=='sportbike'||!equippedAppearance.lighting?.color)return;
+ if(!equippedAppearance.lighting?.color)return;
+ if(player.model!=='sedan')return;
  const textures=underglowTextures||(underglowTextures=createUnderglowTextures());
  const {mask,light,width,height}=textures,color=underglowColor(equippedAppearance.lighting,Math.floor(simTime/110)*110);
  if(textures.color!==color){
@@ -10390,6 +10411,12 @@ function drawNightLighting(level){
  if(!nightLightTextures)nightLightTextures=createNightLightTextures();
  const {beam}=nightLightTextures;
  ctx.save();ctx.globalAlpha=level;paintSceneryTiles('night');
+ // Repaint the motorbike after the night shading, so it looks exactly as it does by day.
+ if(player.model==='sportbike'&&progress.mode!=='train'){
+  ctx.globalAlpha=1;
+  paintVehicle(ctx,player,true,lerp(player.prevX,player.x,renderAlpha),lerp(player.prevY,player.y,renderAlpha),lerp(player.prevAngle,player.angle,renderAlpha));
+  ctx.globalAlpha=level;
+ }
  drawNightUnderglow();
  for(const c of traffic)drawVehicleLights(c,beam);
  for(const c of police)drawVehicleLights(c,beam);
@@ -10678,9 +10705,15 @@ function paintDeliveryTruck(g,c,body,look){
 function paintFleetVehicle(g,c,custom,x,y,angle,look){
  const bus=c.model==='bus';
  if(!bus&&c.model!=='truck'){
-  // The tractor shares the truck's boost flame.
-  if(c===player&&turbo.active){g.save();g.translate(x,y);g.rotate(angle);g.fillStyle='#99e6d5';g.beginPath();g.moveTo(-c.hw,-4);g.lineTo(-c.hw-15-Math.sin(simTime*.08)*3,0);g.lineTo(-c.hw,4);g.fill();g.restore();}
-  paintTrafficVehicle(g,c,x,y,angle);return;
+  // Draws the tractor at (px,py). The truck's boost flame, and the ghost outline, go with it.
+  const draw=(l,px,py)=>{
+   if(c===player&&turbo.active){l.save();l.translate(px,py);l.rotate(angle);l.fillStyle='#99e6d5';l.beginPath();l.moveTo(-c.hw,-4);l.lineTo(-c.hw-15-Math.sin(simTime*.08)*3,0);l.lineTo(-c.hw,4);l.fill();l.restore();}
+   paintTrafficVehicle(l,c,px,py,angle);
+   if(c===player&&ghosting()){l.save();l.translate(px,py);l.rotate(angle);l.strokeStyle='#9be4dc';l.lineWidth=1.4;l.strokeRect(-c.hw-2,-c.hh-3,c.hw*2+4,c.hh*2+6);l.restore();}
+  };
+  if(c===player&&ghosting())paintGhostedLayer(g,x,y,angle,Math.max(c.hw,c.hh)+18,l=>draw(l,0,0));
+  else draw(g,x,y);
+  return;
  }
  if(!custom)look=bus?STOCK_BUS_APPEARANCE:TRAFFIC_TRUCK_APPEARANCE;
  const {hw,hh}=c,body=c.hit?'#f3d9ad':custom?look.paint.color:c.color;
@@ -10694,6 +10727,23 @@ function paintFleetVehicle(g,c,custom,x,y,angle,look){
  g.restore();
 }
 
+// Ghost drive fades a vehicle as one piece. Its shapes overlap, so fading each one separately
+// leaves the overlaps almost opaque. Instead, draw it opaque into a layer, then fade the layer.
+let ghostLayer=null;
+function paintGhostedLayer(g,x,y,angle,radius,draw){
+ const t=g.getTransform(),s=t.a,size=Math.ceil(radius*2*s);
+ ghostLayer??=document.createElement('canvas');
+ if(ghostLayer.width<size)ghostLayer.width=ghostLayer.height=size;
+ const l=ghostLayer.getContext('2d');
+ l.setTransform(1,0,0,1,0,0);l.clearRect(0,0,size,size);
+ l.setTransform(s,0,0,s,size/2,size/2);
+ draw(l);
+ // Place the layer at the vehicle's position in device pixels.
+ const cx=t.a*x+t.c*y+t.e,cy=t.b*x+t.d*y+t.f;
+ g.save();g.setTransform(1,0,0,1,0,0);g.globalAlpha*=.6;
+ g.drawImage(ghostLayer,0,0,size,size,cx-size/2,cy-size/2,size,size);
+ g.restore();
+}
 function paintSportBike(g,c,custom,x,y,angle,look){
  // Top-down sport bike with its rider, nose pointing along +x.
  const has=id=>custom&&look.details.includes(id),paint=look.paint,body=c.hit?'#f3d9ad':paint.color,wheel=look.wheels.color;
@@ -10703,7 +10753,6 @@ function paintSportBike(g,c,custom,x,y,angle,look){
  const shape=(points,color)=>{g.fillStyle=color;g.beginPath();points.forEach(([px,py],n)=>n?g.lineTo(px,py):g.moveTo(px,py));g.closePath();g.fill();};
  const fairing=[[-8,-2.1],[2,-3.4],[8.5,-2.7],[11.6,0],[8.5,2.7],[2,3.4],[-8,2.1]];
  g.save();g.translate(x,y);g.rotate(angle);
- if(c===player&&ghosting())g.globalAlpha*=.6;
  if(look.lighting.color){
   const light=underglowColor(look.lighting);
   g.save();g.shadowColor=light;g.shadowBlur=11;g.globalAlpha*=.3;round(-15,-7,30,14,6,light);g.restore();
@@ -10751,12 +10800,17 @@ function paintSportBike(g,c,custom,x,y,angle,look){
  dot(.6,0,2.9,helmet);
  g.fillStyle=visor;g.beginPath();g.moveTo(.6,0);g.arc(.6,0,2.9,-.85,.85);g.closePath();g.fill();
  dot(-.2,-.8,.8,'#ffffff66');
- if(c===player&&ghosting()){g.strokeStyle='#9be4dc';g.lineWidth=1.4;g.strokeRect(-15,-7,30,14);}
+ // Outline the fairing itself, so the ghost edge follows the bike's shape.
+ if(c===player&&ghosting()){g.strokeStyle='#9be4dc';g.lineWidth=1.5;g.lineJoin='round';g.beginPath();fairing.forEach(([px,py],n)=>n?g.lineTo(px,py):g.moveTo(px,py));g.closePath();g.stroke();}
  g.restore();
 }
 function paintVehicle(g,c,custom=false,x=c.x,y=c.y,angle=c.angle,look=equippedAppearance){
  if(c.model==='train'){railPaintVehicle(g,c,x,y,angle,look);return;}
- if(c.model==='sportbike'){paintSportBike(g,c,custom,x,y,angle,look);return;}
+ if(c.model==='sportbike'){
+  if(c===player&&ghosting())paintGhostedLayer(g,x,y,angle,22,l=>paintSportBike(l,c,custom,0,0,angle,look));
+  else paintSportBike(g,c,custom,x,y,angle,look);
+  return;
+ }
  const policeCar=c.kind==='police'||c.model==='police';
  if(!policeCar&&c.model&&c.model!=='sedan'){paintFleetVehicle(g,c,custom,x,y,angle,look);return;}
  const fill=(x,y,w,h,color)=>{g.fillStyle=color;g.fillRect(x,y,w,h);};
