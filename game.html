@@ -211,6 +211,7 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
    <button type="button" role="switch" data-admin-toggle="nitro" aria-checked="false">Infinite nitro<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="phase" aria-checked="false">Ghost mode<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="roadArrows" aria-checked="true">Road arrows<span aria-hidden="true"></span></button>
+   <button type="button" role="switch" data-admin-toggle="racing" aria-checked="true">Street racing<span aria-hidden="true"></span></button>
    <button type="button" role="switch" data-admin-toggle="police" aria-checked="false" hidden>Police chase<span aria-hidden="true"></span></button>
    <div class="admin-volume">
     <label for="musicVolume">Music volume</label>
@@ -240,9 +241,9 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
  </section>
 </div>
 <div class="modal" id="pauseModal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="pauseTitle"><button class="iconbtn close" data-close aria-label="Resume driving">×</button><div class="eyebrow">TAKE YOUR TIME</div><h2 id="pauseTitle">Parked for a moment.</h2><p>The city will be right here.</p><button class="start" id="resumeBtn">Keep driving <span>↗</span></button></section></div>
-<div class="modal" id="helpModal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><button class="iconbtn close" data-close aria-label="Close controls">×</button><div class="eyebrow">GET A FEEL FOR IT</div><h2 id="helpTitle" data-pad-hint="Controller controls">Your keys to the city.</h2><div class="help-row"><span>Accelerate</span><b data-pad-hint="{accelerate}">W / ↑</b></div><div class="help-row"><span>Brake, then reverse</span><b data-pad-hint="{reverse}">S / ↓</b></div><div class="help-row"><span>Steer (road vehicles)</span><b data-pad-hint="Left stick / D-pad ← →">A D / ← →</b></div><div class="help-row"><span>Handbrake / drift</span><b data-pad-hint="{brake}">SPACE</b></div><div class="help-row"><span>Recover to a clear road or railway</span><b data-pad-hint="{recover}">R</b></div><div class="help-row"><span>Garage / city map</span><b data-pad-hint="{garage} / {map}">G / M</b></div><div class="help-row"><span>Turbo (once unlocked)</span><b data-pad-hint="{boost} + {accelerate}">SHIFT + W / ↑</b></div><div class="help-row"><span>Cycle game modes / mode menu</span><b data-pad-hint="D-pad ↓ / ↑">C / V</b></div><div class="help-row"><span>Accept a ride or driving job</span><b data-pad-hint="{confirm}">E</b></div><div class="help-row"><span>Trophy Room</span><b data-pad-hint="{trophies}">B</b></div><div class="help-row"><span>Pause</span><b data-pad-hint="{pause}">ESC</b></div><div class="help-row"><span>Open controls</span><b data-pad-hint="{help}">? button</b></div><p>In Free Roam and Uber you can swap the car for the Streak motorbike in the garage: it is much faster, with its own upgrades and cosmetics. The Tractor has the Delivery Truck's speed and boost, with its own colours and performance upgrades, and keeps full speed on dirt, grass and fields. Weathered, half-collapsed houses in the old towns come down if you crash into them. Explore green pharmacies, hospital campuses, glass terminals, roof gardens and four distinct old-town styles. Airports range from regional airfields to international hubs with twin runways and larger airliners. Traffic includes hatchbacks, vans, trucks, buses, ambulances, fire trucks and motorbikes. Traffic drives at different speeds. Highway speeders and police drive aggressively. Emergency vehicles and highway speeders get priority at crossings. Ambulances and fire trucks keep normal following distances and cruise slightly faster than regular traffic. Fast motorcycle groups sometimes ride the expressways at night. Buildings and vehicles are solid. Ease off before a corner, or hold the handbrake to slide. Grass slows you down. Dirt trails have looser grip and a lower top speed. Open the map and use Find nearby to pin a residential, commercial or industrial sector, airport, giant Old Town, highway or giant reserve. Drive to earn spendable kilometres. Open the garage to upgrade the vehicle you are currently driving. Turbo recharges after use. While actively boosting, hitting another car makes it explode and clears it from your path—including parked cars and police. Every pursuing police car you destroy awards 100 bonus kilometres to spend in the garage. Glowing pickups appear occasionally as you drive: speed boost (15s), ghost drive through every obstacle with full speed on grass (18s), and infinite nitro (25s; boost even without a turbo upgrade). Collect them by driving over them. Ghost drive passes through buildings, traffic, police, planes, rocks and water. Cars you pass through while ghosting stay intact, even with nitro active. If ghost drive ends while you overlap an obstacle or vehicle, you can move clear before colliding with that object again. In Free Roam, turn on Police chase in the admin panel (`) for up to five coordinated pursuers: a chaser, an interceptor, two flankers and a unit aiming for junctions ahead. They close gaps at high speed, ram your car and intercept your path from ahead and both sides. Lost or destroyed units are quickly replaced ahead, outside your view. Changing mode ends the chase. Uber, bus and truck jobs have no time limit. Uber rides use your Runabout. Stop at the marked curb to pick up one passenger, then drive them to their drop-off. Bus jobs have 2–6 stops, including the first pickup and final drop-off. Each offer shows its total stops and bonus KM; the active job shows which stop you are on. Choose Accept job to take an offer. Every new assignment needs your acceptance. Routes range from regional trips to cross-country journeys. Follow the marked bays and stop for two seconds to load or unload. Completed drop-offs earn KM. The clean-driving bonus starts at 100% and drops by 5 points per collision with a vehicle or building. Cars destroyed with boost don’t count. At the final drop-off, the remaining percentage of the full job fare is paid as an extra bonus. Jobs, passengers and cargo wait for you when you switch modes, and are saved between sessions. Use Next job to get an offer with a pickup near your current location, even after roaming far away. You still need to accept it. Use End job to leave an unfinished assignment. The bright purple map route favours main roads, highways and longer straight stretches, avoiding old-town and airport shortcuts where practical. Short purple arrows on the road mark upcoming turns during accepted jobs. They appear earlier at speed, fade after each turn and leave long straight roads clear. Car, Bus and Truck keep separate performance and cosmetic builds. Free Roam and Uber share the Car garage. Train mode places your three-car train on the nearest clear railway, with matching outward-facing cabs at each end and a carriage in the middle. Use <span data-pad-hint="{accelerate}">W / Up</span> to go forward, <span data-pad-hint="{reverse}">S / Down</span> to brake then reverse, and <span data-pad-hint="{brake}">Space</span> for stronger braking. Speed, acceleration and boost are equal in both directions. Between jobs, tap <span data-pad-hint="D-pad ← / →">A / Left or D / Right</span> to move one step through Left, Straight and Right for the next junction. For example, after choosing Right, tap Left once for Straight and again for Left. Choices follow your direction of travel, including while reversing. Without a selection the train continues straight, or follows your chosen map destination. You can change the queued turn until your leading cab enters the junction. During an accepted station job, junctions follow the job automatically. Stop with the center of any of the three cars inside the purple station marker for two seconds to load or unload. Railway jobs alternate passenger services and freight deliveries, with no time limit. The Train garage has its own upgrades. Open the map to set a rail destination between jobs. Occasional NPC trains stop at stations and obey shared signals. The entire railway, including junctions and stations, is elevated on continuous bridges. Road vehicles pass beneath it; trains and ground traffic never collide with or yield to each other. Tracks and bridge decks fade while driving a road vehicle and become fully opaque in Train mode. Switching back places your road vehicle on a nearby clear road. Your rail jobs, train position and upgrades are saved.</p><button class="start" data-close>Got it <span>↗</span></button></section></div>
+<div class="modal" id="helpModal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><button class="iconbtn close" data-close aria-label="Close controls">×</button><div class="eyebrow">GET A FEEL FOR IT</div><h2 id="helpTitle" data-pad-hint="Controller controls">Your keys to the city.</h2><div class="help-row"><span>Accelerate</span><b data-pad-hint="{accelerate}">W / ↑</b></div><div class="help-row"><span>Brake, then reverse</span><b data-pad-hint="{reverse}">S / ↓</b></div><div class="help-row"><span>Steer (road vehicles)</span><b data-pad-hint="Left stick / D-pad ← →">A D / ← →</b></div><div class="help-row"><span>Handbrake / drift</span><b data-pad-hint="{brake}">SPACE</b></div><div class="help-row"><span>Recover to a clear road or railway</span><b data-pad-hint="{recover}">R</b></div><div class="help-row"><span>Garage / city map</span><b data-pad-hint="{garage} / {map}">G / M</b></div><div class="help-row"><span>Turbo (once unlocked)</span><b data-pad-hint="{boost} + {accelerate}">SHIFT + W / ↑</b></div><div class="help-row"><span>Cycle game modes / mode menu</span><b data-pad-hint="D-pad ↓ / ↑">C / V</b></div><div class="help-row"><span>Accept a ride or driving job</span><b data-pad-hint="{confirm}">E</b></div><div class="help-row"><span>Trophy Room</span><b data-pad-hint="{trophies}">B</b></div><div class="help-row"><span>Pause</span><b data-pad-hint="{pause}">ESC</b></div><div class="help-row"><span>Open controls</span><b data-pad-hint="{help}">? button</b></div><p>In Free Roam and Uber you can swap the car for the Streak motorbike in the garage: it is much faster, with its own upgrades and cosmetics. The Tractor has the Delivery Truck's speed and boost, with its own colours and performance upgrades, and keeps full speed on dirt, grass and fields. Weathered, half-collapsed houses in the old towns come down if you crash into them. Explore green pharmacies, hospital campuses, glass terminals, roof gardens and four distinct old-town styles. Airports range from regional airfields to international hubs with twin runways and larger airliners. Traffic includes hatchbacks, vans, trucks, buses, ambulances, fire trucks and motorbikes. Traffic drives at different speeds. Highway speeders and police drive aggressively. Emergency vehicles and highway speeders get priority at crossings. Ambulances and fire trucks keep normal following distances and cruise slightly faster than regular traffic. Fast motorcycle groups sometimes ride the expressways at night. Buildings and vehicles are solid. Ease off before a corner, or hold the handbrake to slide. Grass slows you down. Dirt trails have looser grip and a lower top speed. Open the map and use Find nearby to pin a residential, commercial or industrial sector, airport, giant Old Town, highway or giant reserve. Drive to earn spendable kilometres. Open the garage to upgrade the vehicle you are currently driving. Turbo recharges after use. While actively boosting, hitting another car makes it explode and clears it from your path—including parked cars and police. Every pursuing police car you destroy awards 100 bonus kilometres to spend in the garage. Glowing pickups appear occasionally as you drive: speed boost (15s), ghost drive through every obstacle with full speed on grass (18s), and infinite nitro (25s; boost even without a turbo upgrade). Collect them by driving over them. Ghost drive passes through buildings, traffic, police, planes, rocks and water. Cars you pass through while ghosting stay intact, even with nitro active. If ghost drive ends while you overlap an obstacle or vehicle, you can move clear before colliding with that object again. In Free Roam, turn on Police chase in the admin panel (`) for up to five coordinated pursuers: a chaser, an interceptor, two flankers and a unit aiming for junctions ahead. They close gaps at high speed, ram your car and intercept your path from ahead and both sides. Lost or destroyed units are quickly replaced ahead, outside your view. Changing mode ends the chase. Uber, bus and truck jobs have no time limit. Uber rides use your Runabout. Street Racing uses the same ride as Free Roam: stop on the chequered start grid, wait for the lights, then finish a sprint ahead of three rivals in your class of vehicle. Off-road shortcuts are allowed. Places pay 500, 300, 200 or 100 KM. Forfeiting a race, or leaving the mode, loses it.Stop at the marked curb to pick up one passenger, then drive them to their drop-off. Bus jobs have 2–6 stops, including the first pickup and final drop-off. Each offer shows its total stops and bonus KM; the active job shows which stop you are on. Choose Accept job to take an offer. Every new assignment needs your acceptance. Routes range from regional trips to cross-country journeys. Follow the marked bays and stop for two seconds to load or unload. Completed drop-offs earn KM. The clean-driving bonus starts at 100% and drops by 5 points per collision with a vehicle or building. Cars destroyed with boost don’t count. At the final drop-off, the remaining percentage of the full job fare is paid as an extra bonus. Jobs, passengers and cargo wait for you when you switch modes, and are saved between sessions. Use Next job to get an offer with a pickup near your current location, even after roaming far away. You still need to accept it. Use End job to leave an unfinished assignment. The bright purple map route favours main roads, highways and longer straight stretches, avoiding old-town and airport shortcuts where practical. Short purple arrows on the road mark upcoming turns during accepted jobs. They appear earlier at speed, fade after each turn and leave long straight roads clear. Car, Bus and Truck keep separate performance and cosmetic builds. Free Roam and Uber share the Car garage. Train mode places your three-car train on the nearest clear railway, with matching outward-facing cabs at each end and a carriage in the middle. Use <span data-pad-hint="{accelerate}">W / Up</span> to go forward, <span data-pad-hint="{reverse}">S / Down</span> to brake then reverse, and <span data-pad-hint="{brake}">Space</span> for stronger braking. Speed, acceleration and boost are equal in both directions. Between jobs, tap <span data-pad-hint="D-pad ← / →">A / Left or D / Right</span> to move one step through Left, Straight and Right for the next junction. For example, after choosing Right, tap Left once for Straight and again for Left. Choices follow your direction of travel, including while reversing. Without a selection the train continues straight, or follows your chosen map destination. You can change the queued turn until your leading cab enters the junction. During an accepted station job, junctions follow the job automatically. Stop with the center of any of the three cars inside the purple station marker for two seconds to load or unload. Railway jobs alternate passenger services and freight deliveries, with no time limit. The Train garage has its own upgrades. Open the map to set a rail destination between jobs. Occasional NPC trains stop at stations and obey shared signals. The entire railway, including junctions and stations, is elevated on continuous bridges. Road vehicles pass beneath it; trains and ground traffic never collide with or yield to each other. Tracks and bridge decks fade while driving a road vehicle and become fully opaque in Train mode. Switching back places your road vehicle on a nearby clear road. Your rail jobs, train position and upgrades are saved.</p><button class="start" data-close>Got it <span>↗</span></button></section></div>
 <div class="modal" id="mapModal" hidden><section class="dialog map-dialog" role="dialog" aria-modal="true" aria-labelledby="mapTitle"><button class="iconbtn close" data-close aria-label="Close map">×</button><div class="map-head"><div class="eyebrow">THERE’S ALWAYS ANOTHER STREET</div><h2 id="mapTitle">Your next neighbourhood.</h2></div><div class="map-tools"><span id="mapArea"></span><div><button id="mapHome" aria-label="Centre map on your car">Locate me</button><button id="mapZoomOut" aria-label="Zoom out">−</button><button id="mapZoomIn" aria-label="Zoom in">+</button></div></div><div class="map-discover"><span>FIND NEARBY</span><button id="oldTownDiscovery" data-landscape="oldtown">Old Town</button><button data-landscape="industrial">Industrial sector</button><button data-landscape="residential">Residential sector</button><button data-landscape="commercial">Commercial sector</button><button data-landscape="highway">Highway</button><select id="reserveDiscovery" aria-label="Find a nature reserve"><option value="" selected disabled>Nature reserves</option><option value="any">Nearest reserve</option><option value="lake">Lake Trails</option><option value="river">River Valley</option><option value="pine">Pine Forest</option><option value="dense">Dense Forest</option><option value="meadow">Wildflower Meadows</option><option value="dry">Rocky Badlands</option><option value="wheat">Wheat Farm</option><option value="corn">Corn Farm</option><option value="hemp">Hemp / Cannabis Farm</option><option value="animals">Animal Farm</option></select><button id="clearDestination">Clear pin</button></div><canvas id="atlas" width="1000" height="800" aria-describedby="mapControlsHint" aria-label="Map of the surrounding city."></canvas><div class="map-foot"><span>↗ YOU · <span style="color:#e0c48b">━ RAIL · ● STATION</span></span><span id="mapControlsHint">Drag to explore · Scroll to zoom</span><span data-pad-hint="{back} TO CLOSE">M / ESC TO CLOSE</span></div></section></div>
-<div class="modal" id="garageModal" hidden><section class="dialog garage-dialog" role="dialog" aria-modal="true" aria-labelledby="garageTitle"><button class="iconbtn close" data-close aria-label="Close garage">×</button><div class="garage-head"><div><div class="eyebrow" id="garageEyebrow">NORTHSIDE CUSTOMS / CAR GARAGE</div><h2 id="garageTitle">Make it yours.</h2></div><div class="bank"><small>AVAILABLE TO SPEND</small><strong id="garageBank">0.00 <span>km</span></strong></div></div><div class="ride-switch" id="rideSwitch" role="group" aria-label="Choose your ride for Free Roam and Uber" hidden><button type="button" data-ride="car" aria-pressed="true">Car<span>The Runabout</span></button><button type="button" data-ride="bike" aria-pressed="false">Motorbike<span>The Streak · much faster</span></button><button type="button" data-ride="tractor" aria-pressed="false">Tractor<span>Full speed on any ground</span></button></div><p class="garage-intro" id="garageIntro">This garage belongs to the active vehicle. Its performance and style progress are saved independently.</p><div class="garage-layout"><section class="vehicle-card" id="garageVehicleCard" aria-label="Your car"><div class="vehicle-heading"><span id="garageVehicleHeading">THE RUNABOUT</span><span id="buildStatus">YOUR BUILD</span></div><canvas id="garageCar" width="640" height="400" aria-label="Preview of your equipped paint and cosmetics"></canvas><div class="vehicle-name" id="vehicleName"></div><div class="preview-actions" id="previewActions" hidden></div><div class="vehicle-stats" id="vehicleStats"></div><p class="garage-save" id="garageSave">Progress saved in this browser.</p></section><div class="garage-shop"><div class="garage-tabs" aria-label="Upgrade category"><button class="garage-tab" data-shop-tab="paint" aria-pressed="true" aria-controls="styleShop">Paint</button><button class="garage-tab" data-shop-tab="livery" aria-pressed="false" aria-controls="styleShop">Liveries</button><button class="garage-tab" data-shop-tab="wheels" aria-pressed="false" aria-controls="styleShop">Wheels</button><button class="garage-tab" data-shop-tab="lighting" aria-pressed="false" aria-controls="styleShop">Lights</button><button class="garage-tab" data-shop-tab="detail" aria-pressed="false" aria-controls="styleShop">Body</button><button class="garage-tab" data-shop-tab="performance" aria-pressed="false" aria-controls="performanceShop">Performance</button></div><div id="performanceShop"></div><div id="styleShop" hidden></div><p class="garage-feedback" id="garageFeedback" role="status" aria-live="polite">A little more road. A little more you.</p></div></div><div class="garage-bottom"><span>The city is paused. Cosmetic previews are free. Bought items stay with this vehicle and can be equipped any time.</span><button class="start" data-close>Back to the city <span>↗</span></button></div></section></div>
+<div class="modal" id="garageModal" hidden><section class="dialog garage-dialog" role="dialog" aria-modal="true" aria-labelledby="garageTitle"><button class="iconbtn close" data-close aria-label="Close garage">×</button><div class="garage-head"><div><div class="eyebrow" id="garageEyebrow">NORTHSIDE CUSTOMS / CAR GARAGE</div><h2 id="garageTitle">Make it yours.</h2></div><div class="bank"><small>AVAILABLE TO SPEND</small><strong id="garageBank">0.00 <span>km</span></strong></div></div><div class="ride-switch" id="rideSwitch" role="group" aria-label="Choose your ride for Free Roam, Uber and Street Racing" hidden><button type="button" data-ride="car" aria-pressed="true">Car<span>The Runabout</span></button><button type="button" data-ride="bike" aria-pressed="false">Motorbike<span>The Streak · much faster</span></button><button type="button" data-ride="tractor" aria-pressed="false">Tractor<span>Full speed on any ground</span></button></div><p class="garage-intro" id="garageIntro">This garage belongs to the active vehicle. Its performance and style progress are saved independently.</p><div class="garage-layout"><section class="vehicle-card" id="garageVehicleCard" aria-label="Your car"><div class="vehicle-heading"><span id="garageVehicleHeading">THE RUNABOUT</span><span id="buildStatus">YOUR BUILD</span></div><canvas id="garageCar" width="640" height="400" aria-label="Preview of your equipped paint and cosmetics"></canvas><div class="vehicle-name" id="vehicleName"></div><div class="preview-actions" id="previewActions" hidden></div><div class="vehicle-stats" id="vehicleStats"></div><p class="garage-save" id="garageSave">Progress saved in this browser.</p></section><div class="garage-shop"><div class="garage-tabs" aria-label="Upgrade category"><button class="garage-tab" data-shop-tab="paint" aria-pressed="true" aria-controls="styleShop">Paint</button><button class="garage-tab" data-shop-tab="livery" aria-pressed="false" aria-controls="styleShop">Liveries</button><button class="garage-tab" data-shop-tab="wheels" aria-pressed="false" aria-controls="styleShop">Wheels</button><button class="garage-tab" data-shop-tab="lighting" aria-pressed="false" aria-controls="styleShop">Lights</button><button class="garage-tab" data-shop-tab="detail" aria-pressed="false" aria-controls="styleShop">Body</button><button class="garage-tab" data-shop-tab="performance" aria-pressed="false" aria-controls="performanceShop">Performance</button></div><div id="performanceShop"></div><div id="styleShop" hidden></div><p class="garage-feedback" id="garageFeedback" role="status" aria-live="polite">A little more road. A little more you.</p></div></div><div class="garage-bottom"><span>The city is paused. Cosmetic previews are free. Bought items stay with this vehicle and can be equipped any time.</span><button class="start" data-close>Back to the city <span>↗</span></button></div></section></div>
 <section class="job-card" id="jobCard" aria-label="Current driving job" hidden>
  <div class="job-heading"><span class="eyebrow" id="jobEyebrow">CITY TRANSIT</span><span id="jobStage"></span></div>
  <h2 id="jobTitle"></h2><div class="job-distance" id="jobDistance"></div>
@@ -259,10 +260,10 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
 <div class="modal" id="modeModal" hidden><section class="dialog mode-dialog" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
  <button class="iconbtn close" data-close aria-label="Close game modes">×</button>
  <h2 id="modeTitle">Choose a mode</h2>
- <p class="mode-intro">Free Roam and Uber use your car, motorbike or tractor (switch rides in the garage). Police chase can be turned on in Free Roam from the admin panel.</p>
+ <p class="mode-intro">Free Roam, Uber and Street Racing use your car, motorbike or tractor (switch rides in the garage). Police chase can be turned on in Free Roam from the admin panel.</p>
  <div class="mode-grid" id="modeCards"></div>
  <div class="mode-foot"><span><kbd data-pad-hint="D-pad">C</kbd> <span data-pad-hint="Navigate">Cycle modes</span></span><span><kbd data-pad-hint="{confirm}">V</kbd> <span data-pad-hint="Select mode">Mode picker</span></span><span><kbd data-pad-hint="{back}">E</kbd> <span data-pad-hint="Close menu">Accept a job</span></span></div>
- <p class="mode-note">Jobs have no time limits and resume when you return to their mode.</p>
+ <p class="mode-note">Jobs have no time limits and resume when you return to their mode. A street race is lost if you forfeit it or leave Street Racing.</p>
 </section></div>
 
 <div class="modal" id="trophyModal" hidden>
@@ -422,7 +423,7 @@ const EMERGENCY_TRAFFIC_SHARE=.16;
 const EMERGENCY_MODELS=Object.keys(EMERGENCY_PAINT);
 const CHASE_EMERGENCY_MODELS=EMERGENCY_MODELS.filter(model=>model!=='police');
 function makeCar(x,y,angle,color,kind='traffic',model='sedan'){
- if(kind!=='traffic'&&kind!=='parked')model='sedan';
+ if(kind!=='traffic'&&kind!=='parked'&&kind!=='racer')model='sedan';
  const type=VEHICLE_TYPES[model]||VEHICLE_TYPES.sedan;
  return {x,y,angle,prevX:x,prevY:y,prevAngle:angle,color,kind,model,hw:type.hw,hh:type.hh,vx:0,vy:0,invMass:type.invMass*(kind==='parked'?.24:1),hit:0,braking:false,variant:0,spawnX:x,spawnY:y,spawnAngle:angle};
 }
@@ -4792,16 +4793,21 @@ let savingAvailable=true,progressDirty=false,saveClock=0,distanceRemainder=0,sav
 const RIDE_REWARD_KM=15,TRUCK_REWARD_KM=60;
 const CLEAN_DRIVING_START=100,CLEAN_DRIVING_PENALTY=5,CLEAN_CONTACT_GAP=180;
 const TAKEDOWN_BONUS_PERCENT=5;
+// Street Racing: payouts by finishing place (1st to 4th), in KM.
+const RACE_REWARD_KM=[500,300,200,100],RACE_RIVAL_PACE=[1,.985,.97],RACE_RIVAL_COLORS=['#d9554f','#4f8fd9','#e0b94f'];
+const RACE_GRID_HOLD_MS=900,RACE_COUNTDOWN_MS=3000,RACE_FINISH_RADIUS=26,RACE_GRID_RADIUS=10;
+let raceRun=null,raceCars=[];
 const cleanDrivingContacts=new WeakMap();
 const CLEAN_COLLISION_KINDS=new Set(['building','traffic','parked','police']);
 const GAME_MODES={
  train:{name:'Train',vehicle:'Regional Express',model:'train',color:'#e1be78',pace:1.35,accel:.38,steer:0,brake:1,description:'Drive elevated railways in either direction. Tap A / D to step through junction choices between jobs. Jobs guide you automatically.',reward:'Passenger and freight jobs · Separate Train upgrades.'},
  free:{name:'Free roam',vehicle:'The Runabout',model:'sedan',color:'#d4ed89',pace:1,accel:1,steer:1,brake:1,description:'Explore the city at your own pace.',reward:'Earn KM as you drive.'},
  uber:{name:'Uber',vehicle:'The Runabout',model:'sedan',color:'#d2a8ee',pace:1,accel:1,steer:1,brake:1,description:'Pick up a passenger and take them across town.',reward:'+'+RIDE_REWARD_KM+' KM per completed ride.'},
+ race:{name:'Street Racing',vehicle:'Your ride',model:'sedan',color:'#f2c14e',pace:1,accel:1,steer:1,brake:1,description:'Race a sprint from a standing grid against three rivals in your class of vehicle.',reward:'Finish 1st to 4th for '+RACE_REWARD_KM.join(', ')+' KM.'},
  bus:{name:'Bus',vehicle:'City Bus',model:'bus',color:'#d5b866',pace:.80,accel:.72,steer:.74,brake:.88,description:'Carry passengers along a 2–6-stop route.',reward:'+5 KM per passenger dropped off · +20 KM per route.'},
  truck:{name:'Truck',vehicle:'Delivery Truck',model:'truck',color:'#8bb0a3',pace:.84,accel:.78,steer:.80,brake:.90,description:'Pick up freight at a depot and deliver it to a shop.',reward:'+'+TRUCK_REWARD_KM+' KM per completed delivery.'}
 };
-const MODE_ORDER=['free','uber','bus','truck','train'],JOB_MODES=['uber','bus','truck','train'];
+const MODE_ORDER=['free','uber','race','bus','truck','train'],JOB_MODES=['uber','race','bus','truck','train'];
 const BUS_STOP_COUNTS=[2,3,4,5,6],BUS_BOARDING=[6,4,3,5,4],BUS_ALIGHTING=[0,2,4,3,5];
 function busStopService(job,index=job.index){
  let onboard=0;
@@ -4965,16 +4971,16 @@ function cleanAdminSettings(raw){
  const musicVolume=Number.isFinite(raw?.musicVolume)?Math.round(clamp(raw.musicVolume,0,100)):raw?.music===false?0:45;
  return {
   time:raw?.time==='day'||raw?.time==='night'?raw.time:'cycle',
-  npcs:raw?.npcs!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,roadArrows:raw?.roadArrows!==false,musicVolume,soundVolume
+  npcs:raw?.npcs!==false,racing:raw?.racing!==false,speed:raw?.speed===true,nitro:raw?.nitro===true,phase:raw?.phase===true,roadArrows:raw?.roadArrows!==false,musicVolume,soundVolume
  };
 }
-function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],ownedBusinesses:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],brokenProps:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
+function freshProgress(){return {version:1,admin:cleanAdminSettings(),garageVersion:1,earnedMm:0,spentMm:0,ownedTrophies:[],ownedBusinesses:[],policeEnabled:false,mode:'free',jobs:{},offers:{},completedJobs:{uber:0,race:0,bus:0,truck:0,train:0},jobOfferCounts:{uber:0,race:0,bus:0,truck:0,train:0},jobSerial:0,worldVersion:WORLD_LAYOUT_VERSION,ruins:[],brokenProps:[],position:null,railPosition:null,ride:'car',garages:{train:freshGarage('train'),car:freshGarage('car'),bike:freshGarage('bike'),tractor:freshGarage('tractor'),bus:freshGarage('bus'),truck:freshGarage('truck')}};}
 function cleanProgress(p){
  if(!p||p.version!==1||!Number.isSafeInteger(p.earnedMm)||p.earnedMm<0||!Number.isSafeInteger(p.spentMm)||p.spentMm<0||p.spentMm>p.earnedMm)return null;
  const clean=freshProgress();clean.admin=cleanAdminSettings(p.admin);clean.earnedMm=p.earnedMm;clean.spentMm=p.spentMm;
  /* Police chase used to be a mode; migrate those saves to free roam with the chase on. */
  const legacyPolice=p.mode==='police'||p.policeEnabled===true;
- clean.mode=Object.hasOwn(GAME_MODES,p.mode)?p.mode:'free';clean.policeEnabled=legacyPolice&&clean.mode==='free';
+ clean.mode=Object.hasOwn(GAME_MODES,p.mode)&&!(p.mode==='race'&&clean.admin.racing===false)?p.mode:'free';clean.policeEnabled=legacyPolice&&clean.mode==='free';
  const owned=new Set(Array.isArray(p.ownedTrophies)?p.ownedTrophies:[]);
  clean.ownedTrophies=TROPHIES.filter(item=>owned.has(item.id)).map(item=>item.id);
  const ownedBusinesses=new Set(Array.isArray(p.ownedBusinesses)?p.ownedBusinesses:[]);
@@ -4982,8 +4988,9 @@ function cleanProgress(p){
  clean.jobSerial=Number.isSafeInteger(p.jobSerial)&&p.jobSerial>=0?p.jobSerial:0;
  const savedLayout=Number.isInteger(p.worldVersion)?p.worldVersion:0;
  for(const mode of JOB_MODES){
-  const job=cleanJob(p.jobs?.[mode],mode,true,savedLayout);
-  const offer=cleanJob(p.offers?.[mode],mode,false,savedLayout);
+  // Races are never saved mid-run: an accepted race is lost on reload, like leaving the mode.
+ const job=mode==='race'?null:cleanJob(p.jobs?.[mode],mode,true,savedLayout);
+ const offer=mode==='race'?(savedLayout===WORLD_LAYOUT_VERSION?cleanRaceOffer(p.offers?.race):null):cleanJob(p.offers?.[mode],mode,false,savedLayout);
   if(job){clean.jobs[mode]=job;clean.jobSerial=Math.max(clean.jobSerial,job.id);}
   if(offer&&(!job||job.index===job.stops.length)){clean.offers[mode]=offer;clean.jobSerial=Math.max(clean.jobSerial,offer.id);}
   const total=p.completedJobs?.[mode],count=p.jobOfferCounts?.[mode];
@@ -5189,7 +5196,7 @@ function drawPickupMapMarkers(g,m,showSymbol=false){
 }
 
 let shopTab='paint',previewSelection=null,equippedAppearance=null;
-function garageKindForMode(mode=progress.mode){const ride=(mode==='free'||mode==='uber')?progress.ride:'car';return mode==='train'?'train':mode==='bus'?'bus':mode==='truck'?'truck':ride==='bike'||ride==='tractor'?ride:'car';}
+function garageKindForMode(mode=progress.mode){const ride=(mode==='free'||mode==='uber'||mode==='race')?progress.ride:'car';return mode==='train'?'train':mode==='bus'?'bus':mode==='truck'?'truck':ride==='bike'||ride==='tractor'?ride:'car';}
 function handling(mode=progress.mode){const kind=garageKindForMode(mode);return kind==='bike'?{...GAME_MODES[mode],...BIKE_HANDLING}:kind==='tractor'?{...GAME_MODES[mode],...tractorHandling()}:GAME_MODES[mode];}
 function garageState(modeOrKind=progress.mode){const kind=Object.hasOwn(GARAGE_VEHICLES,modeOrKind)?modeOrKind:garageKindForMode(modeOrKind);return progress.garages[kind];}
 function garageCategories(kind=garageKindForMode()){return GARAGE_CATEGORIES[kind];}
@@ -5477,7 +5484,7 @@ function renderGarage(){
  const kind=garageKindForMode(),vehicle=GARAGE_VEHICLES[kind],build=garageState(kind),categories=garageCategories(kind),performance=build.performance;
  $('garageEyebrow').textContent='NORTHSIDE CUSTOMS / '+vehicle.name.toUpperCase()+' GARAGE';$('garageVehicleHeading').textContent=vehicle.vehicle.toUpperCase();$('garageIntro').textContent=vehicle.intro+' Purchases use the shared kilometre wallet.';$('garageVehicleCard').setAttribute('aria-label','Your '+vehicle.name);$('garageCar').setAttribute('aria-label','Preview of your '+vehicle.name.toLowerCase()+' paint and cosmetics');
  $('garageBank').innerHTML=kmText(balanceMm())+' <span>km</span>';
- const rideSwitch=$('rideSwitch');rideSwitch.hidden=!['free','uber'].includes(progress.mode);
+ const rideSwitch=$('rideSwitch');rideSwitch.hidden=!['free','uber','race'].includes(progress.mode);
  for(const button of rideSwitch.querySelectorAll('[data-ride]'))button.setAttribute('aria-pressed',String(button.dataset.ride===(progress.ride||'car')));
  $('performanceShop').innerHTML=Object.entries(upgradesFor(kind)).map(([id,u])=>{
   const level=performance[id],max=u.prices.length,cost=u.prices[level],locked=!!u.requires&&!performance[u.requires],next=Math.min(max,level+1),missing=Number.isFinite(cost)&&!affordable(cost)?'Drive '+(Math.ceil((Math.round(cost*1000000)-balanceMm())/10000)/100).toFixed(2)+' km more to unlock.':'';
@@ -5801,7 +5808,7 @@ function routeTarget(){return jobTarget()||freeRoamWaypoint();}
 function recordJobCollision(other){
  if(!started||!CLEAN_COLLISION_KINDS.has(other.kind))return;
  const job=currentJob();
- if(!job?.accepted||job.index>=job.stops.length||job.cleanDriving===0)return;
+ if(!job?.accepted||job.index>=job.stops.length||job.cleanDriving===0||progress.mode==='race')return;
  let contacts=cleanDrivingContacts.get(job);
  if(!contacts){contacts=new WeakMap();cleanDrivingContacts.set(job,contacts);}
  const lastContact=contacts.get(other);
@@ -5819,7 +5826,7 @@ function recordJobTakedown(){
 function modeVehicle(mode=progress.mode){const kind=garageKindForMode(mode),model=GARAGE_VEHICLES[kind].model,type=VEHICLE_TYPES[model],look=appearance(garageState(kind),kind);return {model,hw:type.hw,hh:type.hh,invMass:model==='sedan'?1.2:type.invMass,color:look.paint.color};}
 function setRide(ride){
  // Swap between the car and the motorbike in Free Roam and Uber.
- if(!['car','bike','tractor'].includes(ride)||ride===progress.ride||!['free','uber'].includes(progress.mode))return false;
+ if(!['car','bike','tractor'].includes(ride)||ride===progress.ride||!['free','uber','race'].includes(progress.mode)||raceRun)return false;
  const previous=progress.ride;progress.ride=ride;
  const candidate={...player,...modeVehicle()};
  let placement=clearSpot(candidate)?{x:player.x,y:player.y,angle:player.angle}:null;
@@ -5840,6 +5847,7 @@ function setRide(ride){
 function installModeVehicle(){Object.assign(player,modeVehicle());}
 function setGameMode(mode,announce=true){
  if(!Object.hasOwn(GAME_MODES,mode)||mode===progress.mode)return false;
+ if(mode==='race'&&progress.admin.racing===false)return false;
  const candidate={...player,...modeVehicle(mode)},oldPos={x:player.x,y:player.y};let placement=null;
  const leavingRail=progress.mode==='train';
  if(mode==='train')placement=railEnter();
@@ -5858,6 +5866,8 @@ function setGameMode(mode,announce=true){
  }
  if(!placement){toast('No room to change vehicles here. Move to a clearer street and try again.');return false;}
  // Changing mode always ends a police chase; it can only be started again in Free Roam.
+ // Leaving a street race forfeits it.
+ if(progress.mode==='race')abandonRace();
  progress.mode=mode;progress.policeEnabled=false;previewSelection=null;applyBuild();clearKeys();
  if(leavingRail||mode==='train'){resetRailPickup();player.vx=player.vy=0;turbo.active=false;railway.navKey='';railway.destination=null;railway.manualTurn=null;}
  if(Math.hypot(placement.x-oldPos.x,placement.y-oldPos.y)>.5){Object.assign(player,placement,{vx:0,vy:0});snapCamera(player.x,player.y);powers.exitBodies.clear();}
@@ -5876,7 +5886,9 @@ function setGameMode(mode,announce=true){
  if(announce)toast(GAME_MODES[mode].name+(JOB_MODES.includes(mode)?' · '+(jobTarget()?'Your next stop is marked on the map.':inputHint('Press E to accept your next job.','Press {confirm} to accept your next job.')):' · The city is yours.'));
  return true;
 }
-function cycleGameMode(){return setGameMode(MODE_ORDER[(MODE_ORDER.indexOf(progress.mode)+1)%MODE_ORDER.length]);}
+// Street Racing can be hidden from the admin panel; every mode list goes through this.
+function visibleModeOrder(){return MODE_ORDER.filter(id=>id!=='race'||progress.admin.racing!==false);}
+function cycleGameMode(){const order=visibleModeOrder();return setGameMode(order[(order.indexOf(progress.mode)+1)%order.length]);}
 function cityJobType(i,j){
  const feature=featureAt(i,j);
  if(feature.type==='industrial'||feature.type==='oilfield')return feature.industrial;
@@ -6128,6 +6140,7 @@ function distantJobStop(kind,origin,rng,heading,mode,scenicArea){
 }
 function createJobOffer(mode=progress.mode){
  if(mode==='train')return railCreateOffer();
+ if(mode==='race')return createRaceOffer();
  if(!JOB_MODES.includes(mode))return null;
  const serial=progress.jobSerial+1,i=roadIndex(player.x,0),j=roadIndex(player.y,1),rng=seededRandom(Math.floor(worldHash(i,j,serial+801)*4294967296));
  const pickup=mode==='uber'?'pickup':'stop';
@@ -6152,12 +6165,13 @@ function acceptJob(){
  const offer=currentOffer();if(!offer)return false;
  const job={...offer,accepted:true,takedowns:0};if(progress.mode==='train'){railway.manualTurn=null;railResetFuture();railway.destination=null;}progress.jobs[progress.mode]=job;delete progress.offers[progress.mode];
  Object.assign(service,{jobId:job.id,ms:0,retryIn:0});routeNavigation.key='';progressDirty=true;saveProgress();updateHUD();mapView.dirty=true;
+ if(progress.mode==='race'){startRaceStage(job);playGameSound('accept');toast('Race accepted · Drive onto the marked grid and stop there to start.');return true;}
  const message=progress.mode==='bus'?'Bus job accepted · '+job.stops.length+' stops total. First pickup marked in purple.':progress.mode==='uber'?'Ride accepted · Meet your passenger at the purple marker.':'Job accepted · Your pickup is marked in purple. No time limit.';
  playGameSound('accept');toast(message);return true;
 }
 function changeJobOffer(){
  if(!started||activeModal||!JOB_MODES.includes(progress.mode))return;
- const ended=!!jobTarget();if(ended){delete progress.jobs[progress.mode];if(progress.mode==='train'){railway.manualTurn=null;railResetFuture();}}
+ const ended=!!jobTarget();if(ended&&progress.mode==='race')abandonRace();if(ended){delete progress.jobs[progress.mode];if(progress.mode==='train'){railway.manualTurn=null;railResetFuture();}}
  delete progress.offers[progress.mode];Object.assign(service,{jobId:null,ms:0,retryIn:0});routeNavigation.key='';routeNavigation.points=[];
  const offer=ensureJobOffer();progressDirty=true;saveProgress();updateHUD();mapView.dirty=true;
  toast(offer?(ended?'Job ended. ':'')+'New pickup near you · '+inputHint('Press E to accept.','Press {confirm} to accept.'):'Finding a clear pickup. Drive towards another street.');
@@ -6188,11 +6202,286 @@ function insideJobBay(target){
  const cos=Math.cos(target.angle),sin=Math.sin(target.angle);
  return Math.abs(dx*cos+dy*sin)<=halfLength&&Math.abs(-dx*sin+dy*cos)<=halfWidth;
 }
+/* Street Racing: a one-way sprint from a standing grid against three rivals in the player's class of vehicle.
+   The offer keeps its own route and grid, so a race is the same on reload. Rivals follow the route line,
+   but the player may take any line, including off-road shortcuts. */
+const ORDINALS=['1st','2nd','3rd','4th'];
+function raceRouteLength(route){let total=0;for(let i=1;i<route.length;i++)total+=Math.hypot(route[i].x-route[i-1].x,route[i].y-route[i-1].y);return total;}
+// Street Racing routes follow the street lattice. Which grid lines carry a road is a pure function of the
+// world seed (gridEdge), so a route can run 5-15 km even though only a few km of the city are loaded.
+// Units: 1 world unit = 0.8 m (the same ratio jobLegKm uses for KM).
+const RACE_METRES_PER_UNIT=.8,RACE_MIN_M=5000,RACE_MAX_M=15000;
+function raceLatticePos(i,j){return {x:roadCoord(i,0),y:roadCoord(j,1)};}
+const raceLatticeCache=new Map();
+// Lattice neighbours: a vertical road is gridEdge(0,i,j) between (i,j) and (i,j+1), a horizontal road is gridEdge(1,j,i) between (i,j) and (i+1,j).
+function raceLatticeNeighbors(i,j){
+ const key=i+','+j;let list=raceLatticeCache.get(key);if(list)return list;
+ list=[];
+ if(gridEdge(0,i,j))list.push([i,j+1]);
+ if(gridEdge(0,i,j-1))list.push([i,j-1]);
+ if(gridEdge(1,j,i))list.push([i+1,j]);
+ if(gridEdge(1,j,i-1))list.push([i-1,j]);
+ if(raceLatticeCache.size>20000)raceLatticeCache.clear();
+ raceLatticeCache.set(key,list);return list;
+}
+function raceHeapPush(h,item){h.push(item);let k=h.length-1;while(k>0){const p=(k-1)>>1;if(h[p].f<=h[k].f)break;[h[p],h[k]]=[h[k],h[p]];k=p;}}
+function raceHeapPop(h){const top=h[0],last=h.pop();if(h.length){h[0]=last;let k=0;for(;;){const l=2*k+1,r=l+1;let m=k;if(l<h.length&&h[l].f<h[m].f)m=l;if(r<h.length&&h[r].f<h[m].f)m=r;if(m===k)break;[h[m],h[k]]=[h[k],h[m]];k=m;}}return top;}
+// A* over the street lattice, cost = distance between intersections. Returns [[i,j],...] or null.
+function raceLatticePath(start,goal){
+ const gp=raceLatticePos(goal[0],goal[1]),heuristic=(i,j)=>{const p=raceLatticePos(i,j);return Math.hypot(p.x-gp.x,p.y-gp.y);};
+ const best=new Map([[start[0]+','+start[1],0]]),from=new Map(),closed=new Set(),open=[{f:heuristic(start[0],start[1]),i:start[0],j:start[1]}];
+ let steps=0;
+ while(open.length&&steps++<6000){
+  const cur=raceHeapPop(open),ck=cur.i+','+cur.j;
+  if(closed.has(ck))continue;closed.add(ck);
+  if(cur.i===goal[0]&&cur.j===goal[1]){
+   const path=[[cur.i,cur.j]];let k=ck;
+   while(from.has(k)){k=from.get(k);path.push(k.split(',').map(Number));}
+   return path.reverse();
+  }
+  const cp=raceLatticePos(cur.i,cur.j),base=best.get(ck);
+  for(const [ni,nj] of raceLatticeNeighbors(cur.i,cur.j)){
+   const nk=ni+','+nj;if(closed.has(nk))continue;
+   const np=raceLatticePos(ni,nj),cost=base+Math.hypot(np.x-cp.x,np.y-cp.y);
+   if(cost<(best.get(nk)??Infinity)){best.set(nk,cost);from.set(nk,ck);raceHeapPush(open,{f:cost+heuristic(ni,nj),i:ni,j:nj});}
+  }
+ }
+ return null;
+}
+function createRaceOffer(){
+ const serial=progress.jobSerial+1,rng=seededRandom(Math.floor(worldHash(roadIndex(player.x,0),roadIndex(player.y,1),serial+919)*4294967296));
+ // Start on an intersection 150-450 m from the player, inside the loaded area.
+ const ci=roadIndex(player.x,0),cj=roadIndex(player.y,1),starts=[];
+ for(let i=ci-3;i<=ci+4;i++)for(let j=cj-3;j<=cj+4;j++){
+  const p=raceLatticePos(i,j),d=Math.hypot(p.x-player.x,p.y-player.y)*RACE_METRES_PER_UNIT;
+  if(d>=150&&d<=450&&insideLoaded(p.x,p.y,260)&&raceLatticeNeighbors(i,j).length)starts.push([i,j]);
+ }
+ if(!starts.length)return null;
+ const vehicle=modeVehicle('race');
+ for(let attempt=0;attempt<8;attempt++){
+  const start=starts[Math.floor(rng()*starts.length)],sp=raceLatticePos(start[0],start[1]);
+  // Aim for a finish about 70-85% of the wanted distance away; grid roads add the rest of the length.
+  const wantUnits=lerp(RACE_MIN_M,RACE_MAX_M,rng())/RACE_METRES_PER_UNIT,angle=rng()*TAU,reach=wantUnits*lerp(.7,.85,rng());
+  const goal=[roadIndex(sp.x+Math.cos(angle)*reach,0),roadIndex(sp.y+Math.sin(angle)*reach,1)];
+  if(goal[0]===start[0]&&goal[1]===start[1])continue;
+  const path=raceLatticePath(start,goal);
+  if(!path||path.length<3)continue;
+  const points=path.map(([i,j])=>raceLatticePos(i,j));
+  const lengthM=raceRouteLength(points)*RACE_METRES_PER_UNIT;
+  if(lengthM<RACE_MIN_M||lengthM>RACE_MAX_M)continue;
+  // The grid sits 62 m along the first leg, past the junction, so cars stand on a straight.
+  const first=points[0],second=points[1],leg=Math.hypot(second.x-first.x,second.y-first.y);
+  if(leg<90)continue;
+  const fx=(second.x-first.x)/leg,fy=(second.y-first.y)/leg,lx=-fy,ly=fx,heading=Math.atan2(fy,fx);
+  const frontX=first.x+fx*62,frontY=first.y+fy*62;
+  // One row of four across the road. Slot 0 is the player's, on the outer edge, so nothing is parked behind it.
+  const at=side=>({x:frontX+lx*side,y:frontY+ly*side,angle:heading});
+  const spots=[at(28.5),at(9.5),at(-9.5),at(-28.5)];
+  if(!spots.every(p=>insideLoaded(p.x,p.y,120)&&clearSpot({...vehicle,...p})))continue;
+  const last=points.at(-1),prev=points.at(-2),finishAngle=Math.atan2(last.y-prev.y,last.x-prev.x);
+  const grid={x:spots[0].x,y:spots[0].y,angle:heading,action:'grid',name:'Start grid',site:''};
+  const finish={x:last.x,y:last.y,angle:finishAngle,action:'finish',name:'Finish line',site:''};
+  const offer={version:4,id:serial,index:0,accepted:false,kind:'race',stops:[grid,finish],route:points.map(p=>({x:p.x,y:p.y})),slots:spots.slice(1),lengthM:Math.round(lengthM)};
+  progress.jobSerial=serial;progress.jobOfferCounts.race=(progress.jobOfferCounts.race||0)+1;progress.offers.race=offer;progressDirty=true;
+  return offer;
+ }
+ return null;
+}
+function cleanRaceOffer(raw){
+ const pose=p=>p&&['x','y','angle'].every(k=>Number.isFinite(p[k])&&Math.abs(p[k])<1e12);
+ if(!raw||raw.version!==4||raw.accepted!==false||raw.index!==0||!Number.isSafeInteger(raw.id)||raw.id<1||!Number.isFinite(raw.lengthM)||raw.lengthM<=0)return null;
+ if(!Array.isArray(raw.route)||raw.route.length<3||raw.route.length>2000||!raw.route.every(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&Math.abs(p.x)<1e12&&Math.abs(p.y)<1e12))return null;
+ if(!Array.isArray(raw.stops)||raw.stops.length!==2||!raw.stops.every(pose)||raw.stops[0].action!=='grid'||raw.stops[1].action!=='finish')return null;
+ if(!Array.isArray(raw.slots)||raw.slots.length!==3||!raw.slots.every(pose))return null;
+ return {version:4,id:raw.id,index:0,accepted:false,kind:'race',lengthM:raw.lengthM,route:raw.route.map(p=>({x:p.x,y:p.y})),
+  stops:raw.stops.map(p=>({x:p.x,y:p.y,angle:p.angle,action:p.action,name:p.action==='grid'?'Start grid':'Finish line',site:''})),
+  slots:raw.slots.map(p=>({x:p.x,y:p.y,angle:p.angle}))};
+}
+function startRaceStage(job){
+ const cum=[0];for(let i=1;i<job.route.length;i++)cum.push(cum[i-1]+Math.hypot(job.route[i].x-job.route[i-1].x,job.route[i].y-job.route[i-1].y));
+ raceRun={job,route:job.route,cum,total:cum.at(-1),grid:job.stops[0],finish:job.stops[1],state:'grid',hold:0,countdown:0,elapsed:0,playerSeg:0,playerS:0,order:[]};
+ const model=modeVehicle('race').model,pace=stats('race').maxSpeed;
+ raceCars=job.slots.map((slot,n)=>{
+  const c=makeCar(slot.x,slot.y,slot.angle,RACE_RIVAL_COLORS[n],'racer',model);
+  c.race={seg:0,s:0,pace:pace*RACE_RIVAL_PACE[n]*(.99+Math.random()*.02),speed:0,stuckFor:0,done:false};
+  return c;
+ });
+ rebuildDynamic();
+}
+function endRaceCars(){raceCars=[];rebuildDynamic();}
+// Forfeiting: the race is lost, the offer is cleared, and no payout is made.
+function abandonRace(){raceRun=null;endRaceCars();if(progress.jobs.race)delete progress.jobs.race;progressDirty=true;}
+// Nearest point on the race line, searched forward from the car's last segment, so a shortcut
+// across a block cannot jump a car to the far end of the route.
+function raceProject(run,x,y,seg){
+ const {route,cum}=run;let best=null;
+ for(let k=seg;k<Math.min(route.length-1,seg+60);k++){
+  const a=route[k],b=route[k+1],dx=b.x-a.x,dy=b.y-a.y,len2=dx*dx+dy*dy||1;
+  const t=clamp(((x-a.x)*dx+(y-a.y)*dy)/len2,0,1),distance=Math.hypot(x-(a.x+dx*t),y-(a.y+dy*t));
+  if(!best||distance<best.distance)best={seg:k,s:cum[k]+t*(cum[k+1]-cum[k]),distance};
+ }
+ return best||{seg,s:cum[seg]||0,distance:Infinity};
+}
+function racePointAt(run,s){
+ const {route,cum}=run,target=clamp(s,0,run.total);let lo=0,hi=route.length-2;
+ while(lo<hi){const mid=(lo+hi+1)>>1;if(cum[mid]<=target)lo=mid;else hi=mid-1;}
+ const a=route[lo],b=route[lo+1],span=cum[lo+1]-cum[lo]||1,t=clamp((target-cum[lo])/span,0,1);
+ return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};
+}
+// Rival driving: steer at a point ~34 m ahead on the race line, slow for bends, and
+// re-join the line if a collision leaves the car stuck.
+function updateRaceCar(c,dt){
+ const run=raceRun,r=c.race;if(!run||!r)return;
+ if(r.done){const k=Math.pow(.93,dt/16);c.vx*=k;c.vy*=k;c.braking=true;return;}
+ if(run.state!=='racing'){c.vx=c.vy=0;c.braking=false;return;}
+ const here=raceProject(run,c.x,c.y,r.seg);r.seg=here.seg;r.s=here.s;
+ const ahead=racePointAt(run,here.s+34);
+ let diff=Math.atan2(ahead.y-c.y,ahead.x-c.x)-c.angle;diff=Math.atan2(Math.sin(diff),Math.cos(diff));
+ const turn=((VEHICLE_TYPES[c.model]||VEHICLE_TYPES.sedan).turn)*dt*1.2;
+ c.angle+=clamp(diff,-turn,turn);
+ const want=r.pace*(1-Math.min(.35,Math.abs(diff)*.8));
+ r.speed+=clamp(want-r.speed,-.0009*dt,stats('race').acceleration*dt);
+ c.braking=want<r.speed-.01;
+ r.stuckFor=r.speed<.03?r.stuckFor+dt:0;
+ if(r.stuckFor>2000){const p=racePointAt(run,here.s);c.x=p.x;c.y=p.y;c.angle=Math.atan2(ahead.y-p.y,ahead.x-p.x);r.speed=0;r.stuckFor=0;return;}
+ c.vx=Math.cos(c.angle)*r.speed;c.vy=Math.sin(c.angle)*r.speed;
+}
+function raceGo(run){
+ run.state='racing';run.elapsed=0;run.job.index=1;service.ms=0;routeNavigation.key='';
+ playGameSound('job');toast('GO! Finish the sprint ahead of the rivals.');
+ progressDirty=true;saveProgress();mapView.dirty=true;
+}
+function finishRace(rank){
+ const run=raceRun,reward=RACE_REWARD_KM[rank-1];
+ run.job.index=run.job.stops.length;
+ progress.completedJobs.race++;
+ endRaceCars();raceRun=null;
+ earnDistance(reward*1000);playGameSound('job');
+ ensureJobOffer();progressDirty=true;saveProgress();updateHUD();mapView.dirty=true;
+ toast(ORDINALS[rank-1]+' place · +'+reward+' KM');
+}
+function racePosition(run){return 1+run.order.length+raceCars.filter(c=>!c.race.done&&c.race.s>run.playerS).length;}
+// Traffic that drives onto a spot while the grid is held is removed quietly (no crash effect),
+// so no car can shove the player or a rival before GO.
+function clearTrafficFromGrid(){
+ const spots=[raceRun.grid,...raceCars];
+ let removed=false;
+ for(let n=traffic.length-1;n>=0;n--){
+  const c=traffic[n];
+  if(spots.some(s=>Math.hypot(c.x-s.x,c.y-s.y)<34)){c.destroyed=true;traffic.splice(n,1);removed=true;}
+ }
+ if(removed)rebuildDynamic();
+}
+// Grid, countdown and finish. Called from updateJob after the physics step.
+function updateRace(dt){
+ const run=raceRun;if(!run){abandonRace();return;}
+ const pole=run.grid,speed=Math.hypot(player.vx,player.vy),gap=Math.hypot(player.x-pole.x,player.y-pole.y);
+ if(run.state!=='racing')clearTrafficFromGrid();
+ if(run.state==='grid'){
+  if(gap<RACE_GRID_RADIUS&&speed<.014){run.hold+=dt;if(run.hold>=RACE_GRID_HOLD_MS){run.state='countdown';run.countdown=RACE_COUNTDOWN_MS;run.hold=0;}}
+  else run.hold=0;
+  return;
+ }
+ if(run.state==='countdown'){
+  if(gap>RACE_GRID_RADIUS+6||speed>.03){run.state='grid';run.countdown=0;toast('Jump start · Back on the grid.');return;}
+  run.countdown-=dt;if(run.countdown<=0)raceGo(run);
+  return;
+ }
+ run.elapsed+=dt;
+ const me=raceProject(run,player.x,player.y,run.playerSeg);run.playerSeg=me.seg;run.playerS=me.s;
+ const atFinish=(x,y,s)=>Math.hypot(x-run.finish.x,y-run.finish.y)<RACE_FINISH_RADIUS&&s>run.total*.6;
+ for(const c of raceCars)if(!c.race.done&&atFinish(c.x,c.y,c.race.s)){c.race.done=true;run.order.push(c);}
+ if(atFinish(player.x,player.y,me.s))finishRace(run.order.length+1);
+}
+function raceDistanceText(metres){return metres<1000?Math.round(metres)+' m':(metres/1000).toFixed(1)+' km';}
+function raceArrow(from,to){return ['→','↘','↓','↙','←','↖','↑','↗'][mod(Math.round(Math.atan2(to.y-from.y,to.x-from.x)/(Math.PI/4)),8)];}
+function raceTime(ms){const s=ms/1000,m=Math.floor(s/60);return m+':'+(s%60).toFixed(1).padStart(4,'0');}
+function raceReward(){return ORDINALS.map((n,i)=>n+' '+RACE_REWARD_KM[i]).join(' · ')+' KM';}
+function updateRaceHUD(job,target,offer){
+ const put=(id,value)=>{const el=$(id);if(el.textContent!==value)el.textContent=value;};
+ const run=raceRun,bar=$('jobProgress');
+ $('jobClean').hidden=true;$('jobTakedown').hidden=true;$('jobDistanceBonus').hidden=true;$('jobMapBtn').hidden=!target;
+ $('jobStage').classList.remove('active-bus-stage');
+ put('jobEyebrow','STREET RACING');
+ $('acceptJobBtn').hidden=!!target||!offer;put('acceptJobLabel','Accept race');
+ const newJobButton=$('newJobBtn');
+ put('newJobLabel',target?'Forfeit race':'Next race');$('newJobKey').hidden=!!target;
+ newJobButton.classList.toggle('next-job',!target);
+ newJobButton.title=target?'Forfeit this race. No payout.':'Find a new race with a grid near your current location';
+ if(target)newJobButton.removeAttribute('aria-keyshortcuts');else newJobButton.setAttribute('aria-keyshortcuts','N');
+ if(!target){
+  bar.hidden=true;
+  if(!offer){
+   put('jobTitle','Finding a clear grid…');put('jobStage','AWAITING ACCEPTANCE');put('jobDistance','');
+   put('jobCargo','Drive towards another street for a start grid.');put('jobReward','Payouts · '+raceReward());
+   put('jobInstruction','Races start on quiet streets. Next race finds another grid.');
+   return;
+  }
+  put('jobTitle','Sprint · 4 cars');put('jobStage','AWAITING ACCEPTANCE');
+  put('jobDistance','≈ '+(offer.lengthM/1000).toFixed(1)+' km');
+  put('jobCargo','Grid '+jobLegKm(player,offer.stops[0]).toFixed(1)+' km away · 3 rivals in your class');
+  put('jobReward','Payouts · '+raceReward());
+  put('jobInstruction',inputHint('Press E to accept.','Press {confirm} to accept.')+' Off-road shortcuts are allowed.');
+  return;
+ }
+ if(!run)return;
+ if(run.state==='racing'){
+  bar.hidden=true;
+  put('jobTitle','Finish line');put('jobStage','RACING · '+racePosition(run)+' / 4');
+  put('jobDistance',raceArrow(player,run.finish)+' '+raceDistanceText(Math.hypot(player.x-run.finish.x,player.y-run.finish.y)));
+  put('jobCargo','Time '+raceTime(run.elapsed));put('jobReward','Payouts · '+raceReward());
+  put('jobInstruction','Shortcuts across open ground are allowed. Forfeiting ends the race with no payout.');
+  return;
+ }
+ const near=Math.hypot(player.x-run.grid.x,player.y-run.grid.y)<RACE_GRID_RADIUS;
+ bar.hidden=false;
+ put('jobTitle','Start grid');
+ put('jobDistance',near?'◎ ON THE GRID':raceArrow(player,run.grid)+' '+raceDistanceText(Math.hypot(player.x-run.grid.x,player.y-run.grid.y)));
+ put('jobCargo','3 rivals waiting on the grid');put('jobReward','Payouts · '+raceReward());
+ let fill;
+ if(run.state==='grid'){
+  put('jobStage',near?'HOLD STILL':'DRIVE TO THE GRID');
+  put('jobInstruction',near?'Stay still on the marked spot. The lights come on after one second.':'Stop on the marked spot in front of the rivals.');
+  fill=run.hold/RACE_GRID_HOLD_MS;
+ }else{
+  put('jobStage','START IN '+Math.ceil(run.countdown/1000));
+  put('jobInstruction','Hold still. Moving now is a jump start.');
+  fill=1-run.countdown/RACE_COUNTDOWN_MS;
+ }
+ const pct=Math.round(clamp(fill,0,1)*100);
+ $('jobProgressFill').style.width=pct+'%';bar.setAttribute('aria-valuenow',String(pct));
+}
+// Race markers: a chequered strip across the lane, labelled at the grid and at the finish.
+function drawRaceMarker(target){
+ const finish=target.action==='finish';
+ ctx.save();ctx.translate(target.x,target.y);ctx.rotate(target.angle);
+ if(finish){
+  for(let i=0;i<2;i++)for(let j=0;j<6;j++)rect(-8+i*8,-24+j*8,8,8,(i+j)%2?'#f4f1e6':'#15171a');
+ }else{
+  // Same purple parking bay as job pickups, sized to one car on the grid spot.
+  const halfLength=24,halfWidth=13,color=JOB_ROUTE_COLOR;
+  ctx.fillStyle=color+'22';ctx.fillRect(-halfLength,-halfWidth,halfLength*2,halfWidth*2);
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([9,5]);ctx.strokeRect(-halfLength,-halfWidth,halfLength*2,halfWidth*2);ctx.setLineDash([]);
+  rect(-halfLength+4,halfWidth+3,halfLength*2-8,3,'#253e3366');rect(-halfLength+4,halfWidth+5,halfLength*2-8,3,color);
+ }
+ ctx.restore();
+ // The grid label sits behind the spot, clear of the rows of cars.
+ if(finish)textAt('FINISH',target.x,target.y-44,8,'#f2edcb');
+ else textAt('START GRID',target.x-Math.cos(target.angle)*64,target.y-Math.sin(target.angle)*64,8,'#f2edcb');
+}
+// Mode-menu picture for Street Racing: the current ride on a dashed line to a chequered flag.
+function drawRaceFlagPreview(g){
+ g.strokeStyle='#f2c14e82';g.lineWidth=2;g.setLineDash([4,4]);g.beginPath();g.moveTo(-93,10);g.lineTo(84,10);g.stroke();g.setLineDash([]);
+ g.fillStyle='#f2c14e';g.beginPath();g.arc(-93,10,5,0,TAU);g.fill();
+ g.strokeStyle='#d7d4c6';g.lineWidth=3;g.beginPath();g.moveTo(84,-34);g.lineTo(84,12);g.stroke();
+ for(let r=0;r<3;r++)for(let c=0;c<4;c++){g.fillStyle=(r+c)%2?'#f4f1e6':'#15171a';g.fillRect(86+c*7,-34+r*7,7,7);}
+}
 function updateJob(dt){
  if(!started||activeModal||!JOB_MODES.includes(progress.mode))return;
  if(progress.mode==='train'){railUpdateJob(dt);return;}
  const job=currentJob(),target=jobTarget();
  if(!target){service.ms=0;service.retryIn-=dt;if(service.retryIn<=0){ensureJobOffer();service.retryIn=2000;}return;}
+ if(progress.mode==='race'){updateRace(dt);return;}
  if(service.jobId!==job.id){service.jobId=job.id;service.ms=0;}
  const distance=Math.hypot(player.x-target.x,player.y-target.y),slow=Math.hypot(player.vx,player.vy)<.014,accelerating=throttleInput();
  const inStopArea=distance<jobStopRadius(progress.mode)||insideJobBay(target);
@@ -6310,10 +6599,11 @@ function drawRoadTurnGuidance(){
 function updateModeHUD(){
  const mode=progress.mode,def=GAME_MODES[mode],job=currentJob(),target=jobTarget(),offer=currentOffer();
  const put=(id,value)=>{const el=$(id);if(el.textContent!==value)el.textContent=value;};
- put('modeName',def.name.toUpperCase());put('activeVehicleName',GARAGE_VEHICLES[garageKindForMode(mode)].vehicle.toUpperCase());put('nextModeName',GAME_MODES[MODE_ORDER[(MODE_ORDER.indexOf(mode)+1)%MODE_ORDER.length]].name);
+ put('modeName',def.name.toUpperCase());put('activeVehicleName',GARAGE_VEHICLES[garageKindForMode(mode)].vehicle.toUpperCase());{const order=visibleModeOrder();put('nextModeName',GAME_MODES[order[(order.indexOf(mode)+1)%order.length]].name);}
  $('modeMenuBtn').setAttribute('aria-label','Game mode: '+def.name+'. Open mode menu (V).');$('jobCard').hidden=!started||!JOB_MODES.includes(mode);
  updateRouteNavigation();
  if(mode==='train'){railModeHUD();return;}
+ if(mode==='race'){updateRaceHUD(job,target,offer);return;}
  if(!JOB_MODES.includes(mode))return;
  const busMode=mode==='bus',rideMode=mode==='uber';
  put('jobEyebrow',busMode?'CITY TRANSIT':rideMode?'UBER RIDES':'FREIGHT DISPATCH');
@@ -6375,7 +6665,7 @@ function updateModeHUD(){
  $('jobProgressFill').style.width=Math.min(100,service.ms/2200*100)+'%';$('jobProgress').setAttribute('aria-valuenow',String(Math.min(100,Math.round(service.ms/2200*100))));
 }
 function renderModeMenu(){
- $('modeCards').innerHTML=MODE_ORDER.map(id=>{
+ $('modeCards').innerHTML=visibleModeOrder().map(id=>{
   const mode=GAME_MODES[id],job=progress.jobs[id],active=id===progress.mode;
   const resumable=job?.accepted&&job.index<job.stops.length;
   const status=active?'Current mode':resumable?(id==='uber'?'Resume ride':'Resume job'):'';
@@ -6389,6 +6679,7 @@ function renderModeMenu(){
   const look=appearance(garageState(kind),kind),preview=button.querySelector('canvas'),g=preview.getContext('2d');
   g.clearRect(0,0,preview.width,preview.height);
   g.save();g.translate(preview.width/2,preview.height/2);
+  if(id==='race')drawRaceFlagPreview(g);
   if(id==='uber'){
    g.strokeStyle='#b981d282';g.lineWidth=2;g.setLineDash([4,4]);
    g.beginPath();g.moveTo(-93,10);g.bezierCurveTo(-50,10,45,-12,93,-12);g.stroke();g.setLineDash([]);
@@ -6437,6 +6728,7 @@ function drawRouteDestination(){
   return;
  }
  const target=jobTarget();if(!target||!visible(target.x,target.y,110))return;
+ if(progress.mode==='race'){drawRaceMarker(target);return;}
  const ride=progress.mode==='uber',color=JOB_ROUTE_COLOR;
  const {halfLength,halfWidth}=jobBaySize(progress.mode);
  ctx.save();ctx.translate(target.x,target.y);ctx.rotate(target.angle);
@@ -6868,6 +7160,16 @@ $('adminModal').addEventListener('click',event=>{
   if(wasNight!==isNight())refreshTrafficForDayPhase();
  }else if(adminToggle==='npcs')setAdminNPCs(!settings.npcs);
  else if(adminToggle==='police')setPoliceEnabled(!progress.policeEnabled);
+ else if(adminToggle==='racing'){
+  settings.racing=!settings.racing;
+  // Hiding street racing while in it sends the player to Free Roam, which forfeits the race.
+  if(!settings.racing&&progress.mode==='race'){
+   if(!setGameMode('free',false)){
+    // No clear room to change vehicles here: switch the mode in place and reset the vehicle.
+    abandonRace();progress.mode='free';progress.policeEnabled=false;installModeVehicle();applyBuild();
+   }
+  }
+ }
  else{
   settings[adminToggle]=!settings[adminToggle];
   if(adminToggle==='phase'){
@@ -7502,7 +7804,7 @@ function resolve(a,b,hit){
    }
  }
 }
-function rebuildDynamic(){dynamicHash.clear();for(const c of parked)dynamicHash.insert(c);for(const c of traffic)dynamicHash.insert(c);for(const c of police)dynamicHash.insert(c);if(progress.mode!=='train')dynamicHash.insert(player);}
+function rebuildDynamic(){dynamicHash.clear();for(const c of parked)dynamicHash.insert(c);for(const c of traffic)dynamicHash.insert(c);for(const c of police)dynamicHash.insert(c);for(const c of raceCars)dynamicHash.insert(c);if(progress.mode!=='train')dynamicHash.insert(player);}
 function clearSpot(candidate){
  for(const b of staticHash.query(candidate,3))if(contact(candidate,b))return false;
  const clearance={x:candidate.x,y:candidate.y,angle:candidate.angle,hw:Math.max(candidate.hw+7,25),hh:Math.max(candidate.hh+5,15)};
@@ -8348,12 +8650,14 @@ function physics(dt){
  physicsTick++;activeBodies.length=0;
  for(const c of traffic){snapshotBody(c);c.activeTick=physicsTick;activeBodies.push(c);}
  for(const c of police){snapshotBody(c);c.activeTick=physicsTick;activeBodies.push(c);}
+ for(const c of raceCars){snapshotBody(c);c.activeTick=physicsTick;activeBodies.push(c);}
  for(const c of parked){snapshotBody(c);if(Math.abs(c.vx)+Math.abs(c.vy)>.00002){c.activeTick=physicsTick;activeBodies.push(c);}else c.vx=c.vy=0;}
  snapshotPlayer();if(started&&progress.mode!=='train'){player.activeTick=physicsTick;activeBodies.push(player);}
  simTime+=dt;impactCooldown-=dt;player.hit=Math.max(0,player.hit-dt);
  rebuildDynamic();updateTrafficJunctions(dt);if(started&&progress.mode!=='train')updatePlayer(dt);
  for(const c of traffic)updateTraffic(c,dt);
  for(const c of police)updatePolice(c,dt);
+ for(const c of raceCars)updateRaceCar(c,dt);
  const oldX=player.x,oldY=player.y;railUpdate(dt);const intendedTravel=Math.hypot(player.vx,player.vy)*dt,bodies=activeBodies;
  for(const c of bodies){
   if(c.kind==='parked'){c.vx*=Math.pow(.92,dt/16);c.vy*=Math.pow(.92,dt/16);}
@@ -10635,6 +10939,7 @@ function drawNightLighting(level){
  drawNightUnderglow();
  for(const c of traffic)drawVehicleLights(c,beam);
  for(const c of police)drawVehicleLights(c,beam);
+ for(const c of raceCars)drawVehicleLights(c,beam);
  if(progress.mode!=='train')drawVehicleLights(player,beam);
  ctx.restore();
 }
@@ -11372,7 +11677,7 @@ function draw(){
   for(const animal of s.livestock)drawFarmAnimal(animal);
  drawIndustrialEffects();
  if(!night){drawPickups();drawRouteDestination();}
- for(const c of parked)drawCar(c);for(const c of traffic)drawCar(c);for(const c of police)drawCar(c);drawCar(player);
+ for(const c of parked)drawCar(c);for(const c of traffic)drawCar(c);for(const c of police)drawCar(c);for(const c of raceCars)drawCar(c);drawCar(player);
  for(const t of trees)if(visible(t.x,t.y,t.r+10))drawTree(t);
  for(const p of particles){
   ctx.globalAlpha=Math.min(1,p.life/220);
@@ -11785,7 +12090,7 @@ function loop(now){
 if(progress.position)Object.assign(player,progress.position);snapshotPlayer();safePosition={x:player.x,y:player.y,angle:player.angle};snapCamera(player.x,player.y);interpolatePlayer();
 applyBuild();if(progress.mode==='train'){if(!railRestore(progress.railPosition,progress.previousRailPosition)){const p=railEnter();if(p)Object.assign(player,p);}snapshotPlayer();snapCamera(player.x,player.y);interpolatePlayer();}streamWorld(true);resize();if(progress.mode!=='train'&&!powerActive('phase')&&!clearSpot(player))recover();rebuildDynamic();updateHUD();updatePoliceHUD();drawMini();requestAnimationFrame(loop);
 // Opt-in local diagnostics; not enabled during normal play.
-if(new URLSearchParams(location.search).has('test'))window.cityTest={railway,sceneryCache,railTrackOpacity,railPaintVehicle,railDrawTrainLights,railNode,railGeometry,railStation,railPiecesIn,railSample,railPlan,railPath,railEnsure,railMakeTrain,railNearest,railEnter,railCreateOffer,railCleanJob,railUpdateJob,railUpdateNavigation,railSpawnNPC,railCarriages,railAtStop,railRestore,railRefreshWorld,railFindStation,railSetDestination,railReservationsForArea,railReserved,railIntervals,railClearance,railReserveTrains,railUpdatePlayer,railUpdateNPC,railJobDistance,railPoint,railNext,railLength,railOnBridge,railSetManualTurn,railApplyManualTurn,railUpcomingJunction,railTravelDirection,railChoicePort,railJunctionHint,railDrawUpperLayer,trafficJunctions,updateTrafficJunctions,refreshTrafficJunctions,trafficRearLimit,GAME_MODES,MODE_ORDER,JOB_MODES,service,jobNavigation:routeNavigation,modeVehicle,setGameMode,cycleGameMode,currentJob,currentOffer,jobTarget,createJobOffer,ensureJobOffer,acceptJob,changeJobOffer,JOB_BANDS,JOB_ROUTE_COLOR,jobLengthKm,jobLegKm,updateJob,finishJobStop,cityJobType,findJobSite,streetSite,nearbyRoadStops,cleanJob,updateModeHUD,renderModeMenu,showJobMap,OLD_TOWNS,AIRPORTS,AIRCRAFT,oldTownStyle,airportKind,dressBuilding,drawBuilding,drawAircraft,SPEED_KMH,speedKmh,VEHICLE_TYPES,TRAFFIC_MIX,highwayRoute,refillTraffic,routeAt,projectRoute,updateTraffic,senseTraffic,MAX_POLICE,POLICE_ROLES,POWER_TYPES,powers,pickups,pickupState,powerActive,ghosting,activatePower,tickPowers,finishGhostExit,spawnPickup,updatePickups,ignoresCollision,maintainPursuit,spawnPoliceUnit,policeTarget,nearDrivingView,protectVisibleVehicle,regionType,featureAt,getScene,sceneCache,activeScenes,navigation,gridEdge,nearestDriveRoad,navigationPath,surfaceAt,findLandscape,exploration,roadAnchors,CATEGORIES,GARAGE_CATEGORIES,GARAGE_VEHICLES,garageKindForMode,garageState,UPGRADES,appearance,tryOn,paintVehicle,generateBlock,worldHash,worldWindow,chunks,previewChunks,roadCoord,roadHalf,roadIndex,streamWorld,insideLoaded,obstacles,staticHash,dynamicHash,mapView,police,policeState,setPoliceEnabled,deployPolice,planPolice,segmentClear,updatePolice,updatePlayer,progress,turbo,stats,earnDistance,purchase,balanceMm,saveProgress,renderGarage,applyBuild,SAVE_KEY,player,traffic,parked,buildings,boundaries,blocks,keys,xs,ys,contact,physics,recover,clearSpot,closestRoad,onGrass,start,openModal,closeModal,rebuildDynamic,updateHUD,draw,drawAtlas,clearKeys,get state(){return {started,activeModal,simTime,distance,camera:{...camera},world:{infinite:true,loaded:chunks.size,preview:previewChunks.size,generated:worldWindow.generated,center:{i:worldWindow.i,j:worldWindow.j},radius:worldWindow.radius},counts:{blocks:blocks.length,buildings:buildings.length,traffic:traffic.length,parked:parked.length}};}};
+if(new URLSearchParams(location.search).has('test'))window.cityTest={railway,sceneryCache,railTrackOpacity,railPaintVehicle,railDrawTrainLights,railNode,railGeometry,railStation,railPiecesIn,railSample,railPlan,railPath,railEnsure,railMakeTrain,railNearest,railEnter,railCreateOffer,railCleanJob,railUpdateJob,railUpdateNavigation,railSpawnNPC,railCarriages,railAtStop,railRestore,railRefreshWorld,railFindStation,railSetDestination,railReservationsForArea,railReserved,railIntervals,railClearance,railReserveTrains,railUpdatePlayer,railUpdateNPC,railJobDistance,railPoint,railNext,railLength,railOnBridge,railSetManualTurn,railApplyManualTurn,railUpcomingJunction,railTravelDirection,railChoicePort,railJunctionHint,railDrawUpperLayer,trafficJunctions,updateTrafficJunctions,refreshTrafficJunctions,trafficRearLimit,GAME_MODES,MODE_ORDER,JOB_MODES,service,jobNavigation:routeNavigation,modeVehicle,setGameMode,cycleGameMode,currentJob,currentOffer,jobTarget,createJobOffer,ensureJobOffer,acceptJob,changeJobOffer,get raceRun(){return raceRun},get raceCars(){return raceCars},racePosition,createRaceOffer,abandonRace,RACE_REWARD_KM,JOB_BANDS,JOB_ROUTE_COLOR,jobLengthKm,jobLegKm,updateJob,finishJobStop,cityJobType,findJobSite,streetSite,nearbyRoadStops,cleanJob,updateModeHUD,renderModeMenu,showJobMap,OLD_TOWNS,AIRPORTS,AIRCRAFT,oldTownStyle,airportKind,dressBuilding,drawBuilding,drawAircraft,SPEED_KMH,speedKmh,VEHICLE_TYPES,TRAFFIC_MIX,highwayRoute,refillTraffic,routeAt,projectRoute,updateTraffic,senseTraffic,MAX_POLICE,POLICE_ROLES,POWER_TYPES,powers,pickups,pickupState,powerActive,ghosting,activatePower,tickPowers,finishGhostExit,spawnPickup,updatePickups,ignoresCollision,maintainPursuit,spawnPoliceUnit,policeTarget,nearDrivingView,protectVisibleVehicle,regionType,featureAt,getScene,sceneCache,activeScenes,navigation,gridEdge,nearestDriveRoad,navigationPath,surfaceAt,findLandscape,exploration,roadAnchors,CATEGORIES,GARAGE_CATEGORIES,GARAGE_VEHICLES,garageKindForMode,garageState,UPGRADES,appearance,tryOn,paintVehicle,generateBlock,worldHash,worldWindow,chunks,previewChunks,roadCoord,roadHalf,roadIndex,streamWorld,insideLoaded,obstacles,staticHash,dynamicHash,mapView,police,policeState,setPoliceEnabled,deployPolice,planPolice,segmentClear,updatePolice,updatePlayer,progress,turbo,stats,earnDistance,purchase,balanceMm,saveProgress,renderGarage,applyBuild,SAVE_KEY,player,traffic,parked,buildings,boundaries,blocks,keys,xs,ys,contact,physics,recover,clearSpot,closestRoad,onGrass,start,openModal,closeModal,rebuildDynamic,updateHUD,draw,drawAtlas,clearKeys,get state(){return {started,activeModal,simTime,distance,camera:{...camera},world:{infinite:true,loaded:chunks.size,preview:previewChunks.size,generated:worldWindow.generated,center:{i:worldWindow.i,j:worldWindow.j},radius:worldWindow.radius},counts:{blocks:blocks.length,buildings:buildings.length,traffic:traffic.length,parked:parked.length}};}};
 })();
 </script>
 </body>
