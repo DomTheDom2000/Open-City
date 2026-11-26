@@ -1094,9 +1094,14 @@ function coastalBoatPlacement(ocean,vessel,x,y,angle,clearTraffic=false){
   }
  }
  const w=ocean.water;
- return {x:(w.left+w.right)/2,y:(w.top+w.bottom)/2,angle};
+ for(const u of [.5,.33,.67])for(const v of [.5,.33,.67]){
+  const pose={x:lerp(w.left,w.right,u),y:lerp(w.top,w.bottom,v),angle};
+  if(clear(pose))return pose;
+ }
+ return null;
 }
 const oceanClusters=new Map();
+let openWaterTraffic=null;
 function oceanInCluster(x,y){
  const key=x+','+y;
  if(oceanClusters.has(key))return oceanClusters.get(key);
@@ -2067,7 +2072,7 @@ function generateNature(s,road,building,obstacle,away,occupied,rng){
  }
  if(biome==='pine')addDensePineStands(s,away,occupied);
 }
-function roundedTrafficLoop(corners,radius=32,samples=6){
+function roundedTrafficLoop(corners,radius=32,samples=6,includeHeading=false){
  const points=[];
  for(let i=0;i<corners.length;i++){
   const corner=corners[i],previous=corners.at(i-1),next=corners[(i+1)%corners.length];
@@ -2077,7 +2082,10 @@ function roundedTrafficLoop(corners,radius=32,samples=6){
   const exit={x:lerp(corner.x,next.x,after),y:lerp(corner.y,next.y,after)};
   for(let step=0;step<=samples;step++){
    const t=step/samples,u=1-t;
-   points.push({x:u*u*entry.x+2*u*t*corner.x+t*t*exit.x,y:u*u*entry.y+2*u*t*corner.y+t*t*exit.y});
+   const point={x:u*u*entry.x+2*u*t*corner.x+t*t*exit.x,y:u*u*entry.y+2*u*t*corner.y+t*t*exit.y};
+   // Use the tangent of the quadratic curve so a hull can rotate between samples.
+   if(includeHeading)point.heading=Math.atan2(lerp(corner.y-entry.y,exit.y-corner.y,t),lerp(corner.x-entry.x,exit.x-corner.x,t));
+   points.push(point);
   }
  }
  points.push(points[0]);
@@ -2928,7 +2936,22 @@ function inTrafficViewport(view,x,y){
 function protectRoadTraffic(c,view=trafficViewport(TRAFFIC_RETIRE_MARGIN)){
  return inTrafficViewport(view,c.x,c.y)||inTrafficViewport(view,c.prevX,c.prevY);
 }
-function polyRoute(points){let length=0;const segments=[];for(let n=0;n<points.length-1;n++){const p=points[n],q=points[n+1],dx=q.x-p.x,dy=q.y-p.y,len=Math.hypot(dx,dy);if(len<.01)continue;segments.push({x:p.x,y:p.y,dx,dy,len,start:length});length+=len;}return {segments,length};}
+function polyRoute(points){
+ let length=0;
+ const segments=[];
+ for(let n=0;n<points.length-1;n++){
+  const p=points[n],q=points[n+1],dx=q.x-p.x,dy=q.y-p.y,len=Math.hypot(dx,dy);
+  if(len<.01)continue;
+  const segment={x:p.x,y:p.y,dx,dy,len,start:length};
+  if(p.heading!==undefined&&q.heading!==undefined){
+   segment.heading=p.heading;
+   segment.headingChange=angleDiff(q.heading,p.heading);
+  }
+  segments.push(segment);
+  length+=len;
+ }
+ return {segments,length};
+}
 function highwayRoute(axis,index,lane,direction){
  const coord=roadCoord(index,axis),center=axis===0?worldWindow.j:worldWindow.i,r=worldWindow.radius+3;
  if(oceanClosesRoad(axis,index,center))return null;
@@ -3715,8 +3738,12 @@ function routeAt(route,d,out={}){
  const segments=route.segments;let lo=0,hi=segments.length-1;
  while(lo<hi){const mid=(lo+hi)>>1,s=segments[mid];if(d<=s.start+s.len)hi=mid;else lo=mid+1;}
  const s=segments[lo],t=clamp((d-s.start)/s.len,0,1);
- if(s.angleDX!==s.dx||s.angleDY!==s.dy){s.routeAngle=Math.atan2(s.dy,s.dx);s.angleDX=s.dx;s.angleDY=s.dy;}
- out.x=s.x+s.dx*t;out.y=s.y+s.dy*t;out.angle=s.routeAngle;out.index=lo;out.d=d;return out;
+ if(s.heading!==undefined)out.angle=s.heading+s.headingChange*t;
+ else{
+  if(s.angleDX!==s.dx||s.angleDY!==s.dy){s.routeAngle=Math.atan2(s.dy,s.dx);s.angleDX=s.dx;s.angleDY=s.dy;}
+  out.angle=s.routeAngle;
+ }
+ out.x=s.x+s.dx*t;out.y=s.y+s.dy*t;out.index=lo;out.d=d;return out;
 }
 function projectRoute(c){
  const segments=c.route.segments,n=segments.length;let best=Infinity,d=0,index=clamp(c.seg||0,0,n-1);
@@ -5398,10 +5425,8 @@ function cleanProgress(p){
  clean.rides={free:rideOf(p.rides?.free)||legacyRide,race:rideOf(p.rides?.race)||legacyRide};
  if(clean.mode==='free'&&typeof p.boat==='string'&&Object.hasOwn(OCEAN_VESSELS,p.boat)&&clean.position){
   const {x,y,angle}=clean.position,ocean=oceanAtCell(roadIndex(x,0),roadIndex(y,1));
-  if(ocean){
-   clean.boat=p.boat;
-   clean.position=coastalBoatPlacement(ocean,OCEAN_VESSELS[p.boat],x,y,angle);
-  }
+  const pose=ocean&&coastalBoatPlacement(ocean,OCEAN_VESSELS[p.boat],x,y,angle);
+  if(pose){clean.boat=p.boat;clean.position=pose;}
  }
  clean.ruins=Array.isArray(p.ruins)?p.ruins.filter(k=>typeof k==='string'&&/^-?\d{1,9},-?\d{1,9}$/.test(k)).slice(-300):[];
 clean.brokenProps=Array.isArray(p.brokenProps)?p.brokenProps.filter(k=>typeof k==='string'&&/^-?\d{1,9},-?\d{1,9}$/.test(k)).slice(-600):[];
@@ -6560,8 +6585,9 @@ function setBoat(boat){
  const shore=oceanShore(ocean,x,y);
  const heading=previous?angle:Math.atan2((ocean.top+ocean.bottom)/2-shore.y,(ocean.left+ocean.right)/2-shore.x);
  const vessel=OCEAN_VESSELS[boat],start=coastalBoatPlacement(ocean,vessel,x+Math.cos(heading)*(previous?0:48),y+Math.sin(heading)*(previous?0:48),heading,progress.admin.npcs);
+ if(!start)return false;
  progress.boat=boat;previewSelection=null;applyBuild();
- Object.assign(player,start,{vx:0,vy:0,hit:0});turbo.active=false;powers.exitBodies.clear();
+ Object.assign(player,start,{vx:0,vy:0,hit:0});syncOpenWaterTraffic(ocean);turbo.active=false;powers.exitBodies.clear();
  snapCamera(player.x,player.y);streamWorld(true);sceneryCache.valid=false;minimapView.cachedRegion=null;snapshotPlayer();interpolatePlayer();rebuildDynamic();
  routeNavigation.key='';mapView.dirty=true;progressDirty=true;
  saveProgress();updateHUD();
@@ -6597,7 +6623,7 @@ function setRide(ride){
   placement=choices.find(p=>insideLoaded(p.x,p.y,50)&&clearSpot({...candidate,...p}));
  }
  if(!placement){progress.rides[rideKey()]=previous;return false;}
- if(leavingBoat){progress.boat=null;routeNavigation.key='';mapView.dirty=true;sceneryCache.valid=false;minimapView.cachedRegion=null;}
+ if(leavingBoat){progress.boat=null;syncOpenWaterTraffic(null);routeNavigation.key='';mapView.dirty=true;sceneryCache.valid=false;minimapView.cachedRegion=null;}
  previewSelection=null;applyBuild();
  if(Math.hypot(placement.x-player.x,placement.y-player.y)>.5){Object.assign(player,placement,{vx:0,vy:0});snapCamera(player.x,player.y);}
  Object.assign(turbo,{active:false,charge:1,depleted:false,rechargeDelay:0});
@@ -6632,7 +6658,7 @@ function setGameMode(mode,announce=true){
  // Leaving the police chase ends the pursuit.
  // Leaving a street race forfeits it.
  if(progress.mode==='race')abandonRace();
- if(leavingBoat)progress.boat=null;
+ if(leavingBoat){progress.boat=null;syncOpenWaterTraffic(null);}
  progress.mode=mode;farmVisit=null;previewSelection=null;applyBuild();clearKeys();
  if(leavingRail||mode==='train'){resetRailPickup();player.vx=player.vy=0;turbo.active=false;railway.navKey='';railway.destination=null;railway.manualTurn=null;}
  if(Math.hypot(placement.x-oldPos.x,placement.y-oldPos.y)>.5){Object.assign(player,placement,{vx:0,vy:0});snapCamera(player.x,player.y);powers.exitBodies.clear();}
@@ -8230,6 +8256,7 @@ function renderAdminPanel(){
 }
 function setAdminNPCs(enabled){
  progress.admin.npcs=enabled;
+ syncOpenWaterTraffic();
  trafficJunctions.zones.length=0;trafficJunctions.version=-1;trafficJunctions.timer=0;
  if(!enabled){
   traffic.length=police.length=railway.npcs.length=0;
@@ -8917,6 +8944,7 @@ function recover(){
  if(boat&&ocean){
   const shore=oceanShore(ocean,player.x,player.y),v=OCEAN_VESSELS[boat],toWater=Math.atan2((ocean.top+ocean.bottom)/2-shore.y,(ocean.left+ocean.right)/2-shore.x);
   const pose=coastalBoatPlacement(ocean,v,shore.x+Math.cos(toWater)*260,shore.y+Math.sin(toWater)*260,toWater,progress.admin.npcs);
+  if(!pose){toast('No clear water nearby.');return;}
   Object.assign(player,pose,{vx:0,vy:0,hit:0});
   snapCamera(player.x,player.y);streamWorld(true);snapshotPlayer();interpolatePlayer();
   progressDirty=true;saveProgress();updateHUD();toast('Boat repositioned in open water.');return;
@@ -8958,8 +8986,7 @@ function explodeOceanBoat(hull){
  if(explosions.length>12)explosions.splice(0,explosions.length-12);
  playGameSound('explosion',.72);
 }
-function oceanBoatContact(hull,boat,bump){
- const hit=contact(player,hull);
+function oceanBoatContact(hull,boat,bump,hit=contact(player,hull)){
  if(!hit)return false;
  if(hull.hw*hull.hh>=player.hw*player.hh){
   bump(hit);return false;
@@ -8975,49 +9002,95 @@ function oceanBoatBlockedAhead(p,vessel,reach){
   angle:p.angle,hw:reach/2,hh:vessel.hh+2
  });
 }
-// Braking covers roughly speed × BOAT_BRAKE_MS / 2 before the boat stops, which stays inside the look-ahead reach.
 const BOAT_BRAKE_MS=800,BOAT_RESUME_MS=1200;
-function stepOceanTraffic(ocean,dt,bump){
- const playerRadius=Math.hypot(player.hw,player.hh);
+function makeOceanLane(ocean,area,inset,kind,speed,spacing,reverse,avoidPlayer=false){
+ const {left,right,top,bottom}=area,vessel=OCEAN_VESSELS[kind];
+ const points=[{x:left+inset,y:top+inset},{x:right-inset,y:top+inset},
+  {x:right-inset,y:bottom-inset},{x:left+inset,y:bottom-inset}];
+ if(reverse)points.reverse();
+ const route=polyRoute(roundedTrafficLoop(points,650,48,true));
+ const hullRadius=Math.hypot(vessel.hw,vessel.hh);
+ // A route gap needs to clear both hulls even when they straddle a right-angle turn.
+ const minGap=2*hullRadius*Math.SQRT2+24;
+ const count=Math.max(1,Math.floor(route.length/Math.max(spacing,minGap/.7)));
+ const gap=route.length/count;
+ const seed=Math.round(left-ocean.water.left+3*(top-ocean.water.top))+inset;
+ const rng=seededRandom(worldHash(ocean.i,ocean.j,1395+seed)*4294967296);
+ // Shoreline phases follow the world clock, including when a coastline first comes into view.
+ const phase=rng()*gap-(avoidPlayer?simTime*speed:0),boats=[];
+ const playerClearance=avoidPlayer?Math.hypot(player.hw,player.hh)+hullRadius+120:0;
  const sample={};
- for(const lane of oceanBoatLanes(ocean)){
-  const {boats,route,speed}=lane,vessel=OCEAN_VESSELS[lane.kind],step=dt*speed;
-  const lookAhead=24+speed*420,reach=playerRadius+Math.hypot(vessel.hw,vessel.hh)+Math.max(lookAhead,step);
-  for(let i=0;i<boats.length;i++){
-   const boat=boats[i],prior=boat.offset+(simTime-dt)*speed;
-   const p=routeAt(route,prior,sample);
-   const nearby=Math.abs(player.x-p.x)<=reach&&Math.abs(player.y-p.y)<=reach;
-   let cap=Infinity;
-   if(boats.length>1){
-    // Offsets follow the lane order, including across the end of the loop.
-    const leader=boats[(i+1)%boats.length],gap=mod(leader.offset-boat.offset,route.length);
-    cap=Math.max(0,gap-2*vessel.hw-18);
-   }
-   let target=1;
-   if(nearby){
-    const hull={x:p.x,y:p.y,angle:p.angle,hw:vessel.hw,hh:vessel.hh};
-    boat.waitingForPlayer=oceanBoatBlockedAhead(p,vessel,lookAhead)&&!contact(player,hull);
-    if(boat.waitingForPlayer){
-     // The boat matches the player's forward speed along its heading: a stopped player stops it, a slower player slows it.
-     const along=player.vx*Math.cos(p.angle)+player.vy*Math.sin(p.angle);
-     target=clamp(along/speed,0,1);
-    }
-   }else boat.waitingForPlayer=false;
-   // Speed eases toward the target, so the boat brakes and accelerates gradually.
-   const factor=boat.speedFactor??1;
-   const ramp=target<factor?BOAT_BRAKE_MS:BOAT_RESUME_MS;
-   boat.speedFactor=target>factor?Math.min(1,factor+dt/ramp):Math.max(0,factor-dt/ramp);
-   const advance=Math.min(step*boat.speedFactor,cap);
-   if(advance<step){
-    boat.offset+=advance-step;
-    boat.slowedAt=simTime;
-    boat.wakeAmount=advance/step;
-   }
-   if(!nearby)continue;
-   const next=advance?routeAt(route,prior+advance,sample):p;
-   const hull={x:next.x,y:next.y,angle:next.angle,hw:vessel.hw,hh:vessel.hh};
-   if(oceanBoatContact(hull,boat,bump))boats.splice(i--,1);
+ for(let i=0;i<count;i++){
+  const offset=phase+(i+rng()*.3)*gap;
+  const color=vessel.colors[Math.floor(rng()*vessel.colors.length)];
+  if(avoidPlayer){
+   const p=routeAt(route,offset+simTime*speed,sample);
+   if(Math.hypot(p.x-player.x,p.y-player.y)<playerClearance)continue;
   }
+  boats.push({offset,color});
+ }
+ return {kind,vessel,route,speed,minGap,hullRadius,boats};
+}
+function shorelineBoatLanes(ocean){
+ // Parallel loops clear the piers (108 units into the water) and adjacent hulls.
+ return ocean.shorelineLanes??=[
+  makeOceanLane(ocean,ocean.water,140,'fishing',.116,950,true),
+  makeOceanLane(ocean,ocean.water,190,'jetski',.26,1100,false),
+  makeOceanLane(ocean,ocean.water,285,'yacht',.156,3650,true),
+  makeOceanLane(ocean,ocean.water,555,'cruise',.077,8750,false),
+  makeOceanLane(ocean,ocean.water,1180,'cargo',.085,4400,false)
+ ];
+}
+function syncOpenWaterTraffic(ocean=activeBoat()?oceanWaterAt(player.x,player.y):null){
+ if(!progress.admin.npcs||!ocean){openWaterTraffic=null;return;}
+ if(openWaterTraffic?.ocean===ocean)return;
+ const {left,right,top,bottom}=ocean.water,midX=(left+right)/2,midY=(top+bottom)/2;
+ // Four offshore areas with room between them for the full length of opposing cargo ships.
+ const xs=[[left+2050,midX-440],[midX+440,right-2050]];
+ const ys=[[top+2050,midY-440],[midY+440,bottom-2050]];
+ const lanes=[];
+ for(const [row,[top,bottom]] of ys.entries())for(const [col,[left,right]] of xs.entries()){
+  const area={left,right,top,bottom},cargo=row===col;
+  lanes.push(makeOceanLane(ocean,area,0,cargo?'cargo':'cruise',cargo ? .093 : .078,3400,cargo,true));
+  lanes.push(makeOceanLane(ocean,area,720,cargo?'yacht':'fishing',cargo ? .17 : .13,2200,!cargo,true));
+ }
+ openWaterTraffic={ocean,lanes};
+}
+function oceanTrafficLanes(ocean){
+ const shoreline=shorelineBoatLanes(ocean);
+ return openWaterTraffic?.ocean===ocean?shoreline.concat(openWaterTraffic.lanes):shoreline;
+}
+function stepOceanTraffic(ocean,dt,bump){
+ const playerRadius=Math.hypot(player.hw,player.hh),hull={},next={};
+ for(const lane of oceanTrafficLanes(ocean)){
+  const {boats,route,speed,minGap,vessel,hullRadius}=lane,step=dt*speed;
+  const lookAhead=24+speed*420,reach=playerRadius+hullRadius+lookAhead+step;
+  let removed=false;
+  // Read every leader from the start of the tick, including across the loop seam.
+  for(let i=0;i<boats.length;i++){
+   const boat=boats[i],leader=boats[(i+1)%boats.length];
+   const room=boats.length>1?Math.max(0,mod(leader.offset-boat.offset,route.length)-minGap):Infinity;
+   const prior=boat.offset+(simTime-dt)*speed;
+   routeAt(route,prior,hull);hull.hw=vessel.hw;hull.hh=vessel.hh;
+   const nearby=Math.abs(player.x-hull.x)<=reach&&Math.abs(player.y-hull.y)<=reach;
+   const hit=nearby&&contact(player,hull);
+   if(hit&&oceanBoatContact(hull,boat,bump,hit)){removed=true;continue;}
+   let target=Math.min(1,room/(speed*BOAT_BRAKE_MS));
+   if(nearby&&!hit&&oceanBoatBlockedAhead(hull,vessel,lookAhead)){
+    const along=player.vx*Math.cos(hull.angle)+player.vy*Math.sin(hull.angle);
+    target=Math.min(target,clamp(along/speed,0,1));
+   }
+   const factor=simTime-boat.stepTime<=dt*1.01?boat.speedFactor:1;
+   const ramp=target<factor?BOAT_BRAKE_MS:BOAT_RESUME_MS;
+   let advance=Math.min(step*clamp(target,factor-dt/ramp,factor+dt/ramp),room);
+   if(nearby&&advance>0){
+    routeAt(route,prior+advance,next);next.hw=vessel.hw;next.hh=vessel.hh;
+    if(contact(player,next))advance=0;
+   }
+   boat.advance=advance;boat.stepTime=simTime;boat.speedFactor=advance/step;
+  }
+  if(removed)lane.boats=boats.filter(boat=>!boat.destroyed);
+  for(const boat of lane.boats)boat.offset+=boat.advance-step;
  }
 }
 function advanceBoat(dt,boat){
@@ -9040,7 +9113,10 @@ function advanceBoat(dt,boat){
   if(moored)oceanBoatContact(hull,moored,bump);
   else bump(contact(player,hull));
  },Math.hypot(v.hw,v.hh));
- if(progress.admin.npcs)stepOceanTraffic(ocean,dt,bump);
+ if(progress.admin.npcs){
+  if(openWaterTraffic?.ocean!==ocean)syncOpenWaterTraffic(ocean);
+  stepOceanTraffic(ocean,dt,bump);
+ }
 }
 function updatePlayer(dt){
  const boat=activeBoat();
@@ -10101,32 +10177,6 @@ function drawOceanSurface(){
   ctx.restore();
  }
 }
-function oceanBoatLanes(ocean){
- if(ocean.lanes)return ocean.lanes;
- const {left,right,top,bottom}=ocean.water;
- const rng=seededRandom(Math.floor(worldHash(ocean.i,ocean.j,1395)*4294967296));
- const lanes=[
-  // Keep through traffic beyond the harbor piers and their approach.
-  {kind:'cargo',inset:650,spacing:4400,speed:.085,radius:900},
-  {kind:'fishing',inset:173,spacing:950,speed:.116,reverse:true},
-  {kind:'jetski',inset:133,spacing:1100,speed:.26},
-  {kind:'yacht',inset:212,spacing:3650,speed:.156,reverse:true},
-  {kind:'cruise',inset:375,spacing:8750,speed:.077,radius:420},
-  {kind:'cargo',inset:(right-left)*.26,spacing:4200,speed:.103,radius:900,reverse:true}
- ];
- for(const lane of lanes){
-  const {inset,spacing,kind,reverse,radius=124}=lane;
-  const points=[{x:left+inset,y:top+inset},{x:right-inset,y:top+inset},
-   {x:right-inset,y:bottom-inset},{x:left+inset,y:bottom-inset}];
-  if(reverse)points.reverse();
-  // Sample turns finely enough that each chord only changes heading about a degree; routeAt reports one heading per chord.
-  lane.route=polyRoute(roundedTrafficLoop(points,radius,Math.max(6,Math.ceil(radius/10))));
-  const count=Math.ceil(lane.route.length/spacing),gap=lane.route.length/count,phase=rng()*gap;
-  const colors=OCEAN_VESSELS[kind].colors;
-  lane.boats=Array.from({length:count},(_,i)=>({offset:phase+(i+rng()*.60)*gap,color:colors[Math.floor(rng()*colors.length)]}));
- }
- return ocean.lanes=lanes;
-}
 function drawOceanBoat(g,p,kind,color,wakeAmount=1){
  const rect=(x,y,w,h,color)=>{g.fillStyle=color;g.fillRect(x,y,w,h);};
  const rounded=(x,y,w,h,r,color)=>{g.fillStyle=color;g.beginPath();g.roundRect(x,y,w,h,r);g.fill();};
@@ -10205,11 +10255,13 @@ function drawOceanBoat(g,p,kind,color,wakeAmount=1){
  }
  g.restore();
 }
-function visitOceanBoats(ocean,visit){
+function visitOceanBoats(ocean,visit,interpolate=false){
  const sample={};
- for(const lane of oceanBoatLanes(ocean))for(const boat of lane.boats){
-  const p=routeAt(lane.route,boat.offset+simTime*lane.speed,sample);
-  visit(p,lane.kind,boat.color,boat.slowedAt===simTime?boat.wakeAmount:1);
+ for(const lane of oceanTrafficLanes(ocean))for(const boat of lane.boats){
+  const stepped=boat.stepTime===simTime,advance=stepped?boat.advance:STEP*lane.speed;
+  const d=boat.offset+simTime*lane.speed-(interpolate?advance*(1-renderAlpha):0);
+  const p=routeAt(lane.route,d,sample);
+  visit(p,lane.kind,boat.color,stepped?boat.speedFactor:1);
  }
 }
 function drawOceanTraffic(){
@@ -10218,7 +10270,7 @@ function drawOceanTraffic(){
   visitOceanBoats(ocean,(p,kind,color,wake)=>{
    const {hw,wake:length}=OCEAN_VESSELS[kind];
    if(visible(p.x,p.y,Math.max(180,hw+length)))drawOceanBoat(ctx,p,kind,color,wake);
-  });
+  },true);
  }
 }
 function drawMooredBoats(){
@@ -13783,7 +13835,7 @@ function drawMini(elapsed=0){
   for(const ocean of oceansInBounds(m.left,m.top,right,bottom))visitOceanBoats(ocean,p=>{
    const px=(p.x-m.left)*m.scale,py=(p.y-m.top)*m.scale;
    if(px>0&&px<w&&py>0&&py<h)mctx.fillRect(px-1.5,py-1.5,3,3);
-  });
+  },true);
  }
  for(const c of police){
   const px=(lerp(c.prevX,c.x,renderAlpha)-m.left)*m.scale,py=(lerp(c.prevY,c.y,renderAlpha)-m.top)*m.scale;
@@ -13928,7 +13980,16 @@ function loop(now){
  requestAnimationFrame(loop);
 }
 if(progress.position)Object.assign(player,progress.position);snapshotPlayer();safePosition={x:player.x,y:player.y,angle:player.angle};snapCamera(player.x,player.y);interpolatePlayer();
-applyBuild();if(progress.mode==='train'){if(!railRestore(progress.railPosition,progress.previousRailPosition)){const p=railEnter();if(p)Object.assign(player,p);}snapshotPlayer();snapCamera(player.x,player.y);interpolatePlayer();}streamWorld(true);resize();if(progress.mode!=='train'&&!activeBoat()&&!powerActive('phase')&&!clearSpot(player))recover();rebuildDynamic();updateHUD();updatePoliceHUD();drawMini();requestAnimationFrame(loop);
+applyBuild();
+if(activeBoat()&&progress.admin.npcs){
+ const ocean=oceanWaterAt(player.x,player.y);
+ if(ocean){
+  const pose=coastalBoatPlacement(ocean,OCEAN_VESSELS[activeBoat()],player.x,player.y,player.angle,true);
+  if(pose){Object.assign(player,pose);snapshotPlayer();snapCamera(player.x,player.y);interpolatePlayer();}
+  syncOpenWaterTraffic(ocean);
+ }
+}
+if(progress.mode==='train'){if(!railRestore(progress.railPosition,progress.previousRailPosition)){const p=railEnter();if(p)Object.assign(player,p);}snapshotPlayer();snapCamera(player.x,player.y);interpolatePlayer();}streamWorld(true);resize();if(progress.mode!=='train'&&!activeBoat()&&!powerActive('phase')&&!clearSpot(player))recover();rebuildDynamic();updateHUD();updatePoliceHUD();drawMini();requestAnimationFrame(loop);
 // Opt-in local diagnostics; not enabled during normal play.
 if(new URLSearchParams(location.search).has('test'))window.cityTest={railway,sceneryCache,railTrackOpacity,railPaintVehicle,railDrawTrainLights,railNode,railGeometry,railStation,railPiecesIn,railSample,railPlan,railPath,railEnsure,railMakeTrain,railNearest,railEnter,railCreateOffer,railCleanJob,railUpdateJob,railUpdateNavigation,railSpawnNPC,railCarriages,railAtStop,railRestore,railRefreshWorld,railFindStation,railSetDestination,railReservationsForArea,railReserved,railIntervals,railClearance,railReserveTrains,railUpdatePlayer,railUpdateNPC,railJobDistance,railPoint,railNext,railLength,railOnBridge,railSetManualTurn,railApplyManualTurn,railUpcomingJunction,railTravelDirection,railChoicePort,railJunctionHint,railDrawUpperLayer,trafficJunctions,updateTrafficJunctions,refreshTrafficJunctions,trafficRearLimit,GAME_MODES,MODE_ORDER,JOB_MODES,service,jobNavigation:routeNavigation,modeVehicle,setGameMode,cycleGameMode,currentJob,currentOffer,jobTarget,createJobOffer,ensureJobOffer,acceptJob,changeJobOffer,get raceRun(){return raceRun},get raceCars(){return raceCars},racePosition,createRaceOffer,abandonRace,RACE_REWARD_KM,JOB_BANDS,JOB_ROUTE_COLOR,jobLengthKm,jobLegKm,updateJob,finishJobStop,cityJobType,findJobSite,streetSite,nearbyRoadStops,cleanJob,updateModeHUD,renderModeMenu,showJobMap,OLD_TOWNS,AIRPORTS,AIRCRAFT,oldTownStyle,airportKind,dressBuilding,drawBuilding,drawAircraft,SPEED_KMH,speedKmh,VEHICLE_TYPES,TRAFFIC_MIX,highwayRoute,refillTraffic,routeAt,projectRoute,updateTraffic,senseTraffic,MAX_POLICE,POLICE_ROLES,POWER_TYPES,powers,pickups,pickupState,powerActive,ghosting,activatePower,tickPowers,finishGhostExit,spawnPickup,updatePickups,ignoresCollision,maintainPursuit,spawnPoliceUnit,policeTarget,nearDrivingView,protectVisibleVehicle,regionType,featureAt,getScene,sceneCache,activeScenes,navigation,gridEdge,nearestDriveRoad,navigationPath,surfaceAt,findLandscape,exploration,roadAnchors,CATEGORIES,GARAGE_CATEGORIES,GARAGE_VEHICLES,garageKindForMode,garageState,UPGRADES,appearance,tryOn,paintVehicle,generateBlock,worldHash,worldWindow,chunks,previewChunks,roadCoord,roadHalf,roadIndex,streamWorld,insideLoaded,obstacles,staticHash,dynamicHash,mapView,police,policeState,pursuitOn,clearPursuit,isFreeRoam,deployPolice,planPolice,segmentClear,updatePolice,updatePlayer,progress,turbo,stats,earnDistance,purchase,balanceMm,saveProgress,renderGarage,applyBuild,SAVE_KEY,player,traffic,parked,buildings,boundaries,blocks,keys,xs,ys,contact,physics,recover,clearSpot,closestRoad,onGrass,start,openModal,closeModal,rebuildDynamic,updateHUD,draw,drawAtlas,clearKeys,get state(){return {started,activeModal,simTime,distance,camera:{...camera},world:{infinite:true,loaded:chunks.size,preview:previewChunks.size,generated:worldWindow.generated,center:{i:worldWindow.i,j:worldWindow.j},radius:worldWindow.radius},counts:{blocks:blocks.length,buildings:buildings.length,traffic:traffic.length,parked:parked.length}};}};
 })();
