@@ -2067,7 +2067,7 @@ function generateNature(s,road,building,obstacle,away,occupied,rng){
  }
  if(biome==='pine')addDensePineStands(s,away,occupied);
 }
-function roundedTrafficLoop(corners,radius=32){
+function roundedTrafficLoop(corners,radius=32,samples=6){
  const points=[];
  for(let i=0;i<corners.length;i++){
   const corner=corners[i],previous=corners.at(i-1),next=corners[(i+1)%corners.length];
@@ -2075,8 +2075,8 @@ function roundedTrafficLoop(corners,radius=32){
   const after=radius/Math.hypot(next.x-corner.x,next.y-corner.y);
   const entry={x:lerp(corner.x,previous.x,before),y:lerp(corner.y,previous.y,before)};
   const exit={x:lerp(corner.x,next.x,after),y:lerp(corner.y,next.y,after)};
-  for(let step=0;step<=6;step++){
-   const t=step/6,u=1-t;
+  for(let step=0;step<=samples;step++){
+   const t=step/samples,u=1-t;
    points.push({x:u*u*entry.x+2*u*t*corner.x+t*t*exit.x,y:u*u*entry.y+2*u*t*corner.y+t*t*exit.y});
   }
  }
@@ -8975,8 +8975,10 @@ function oceanBoatBlockedAhead(p,vessel,reach){
   angle:p.angle,hw:reach/2,hh:vessel.hh+2
  });
 }
+// Braking covers roughly speed × BOAT_BRAKE_MS / 2 before the boat stops, which stays inside the look-ahead reach.
+const BOAT_BRAKE_MS=800,BOAT_RESUME_MS=1200;
 function stepOceanTraffic(ocean,dt,bump){
- const stopped=Math.hypot(player.vx,player.vy)<.012,playerRadius=Math.hypot(player.hw,player.hh);
+ const playerRadius=Math.hypot(player.hw,player.hh);
  const sample={};
  for(const lane of oceanBoatLanes(ocean)){
   const {boats,route,speed}=lane,vessel=OCEAN_VESSELS[lane.kind],step=dt*speed;
@@ -8985,17 +8987,27 @@ function stepOceanTraffic(ocean,dt,bump){
    const boat=boats[i],prior=boat.offset+(simTime-dt)*speed;
    const p=routeAt(route,prior,sample);
    const nearby=Math.abs(player.x-p.x)<=reach&&Math.abs(player.y-p.y)<=reach;
-   let advance=step;
+   let cap=Infinity;
    if(boats.length>1){
     // Offsets follow the lane order, including across the end of the loop.
     const leader=boats[(i+1)%boats.length],gap=mod(leader.offset-boat.offset,route.length);
-    advance=Math.min(advance,Math.max(0,gap-2*vessel.hw-18));
+    cap=Math.max(0,gap-2*vessel.hw-18);
    }
-   if(nearby&&(stopped||boat.waitingForPlayer)){
+   let target=1;
+   if(nearby){
     const hull={x:p.x,y:p.y,angle:p.angle,hw:vessel.hw,hh:vessel.hh};
     boat.waitingForPlayer=oceanBoatBlockedAhead(p,vessel,lookAhead)&&!contact(player,hull);
-    if(boat.waitingForPlayer)advance=0;
+    if(boat.waitingForPlayer){
+     // The boat matches the player's forward speed along its heading: a stopped player stops it, a slower player slows it.
+     const along=player.vx*Math.cos(p.angle)+player.vy*Math.sin(p.angle);
+     target=clamp(along/speed,0,1);
+    }
    }else boat.waitingForPlayer=false;
+   // Speed eases toward the target, so the boat brakes and accelerates gradually.
+   const factor=boat.speedFactor??1;
+   const ramp=target<factor?BOAT_BRAKE_MS:BOAT_RESUME_MS;
+   boat.speedFactor=target>factor?Math.min(1,factor+dt/ramp):Math.max(0,factor-dt/ramp);
+   const advance=Math.min(step*boat.speedFactor,cap);
    if(advance<step){
     boat.offset+=advance-step;
     boat.slowedAt=simTime;
@@ -10107,7 +10119,8 @@ function oceanBoatLanes(ocean){
   const points=[{x:left+inset,y:top+inset},{x:right-inset,y:top+inset},
    {x:right-inset,y:bottom-inset},{x:left+inset,y:bottom-inset}];
   if(reverse)points.reverse();
-  lane.route=polyRoute(roundedTrafficLoop(points,radius));
+  // Sample turns finely enough that each chord only changes heading about a degree; routeAt reports one heading per chord.
+  lane.route=polyRoute(roundedTrafficLoop(points,radius,Math.max(6,Math.ceil(radius/10))));
   const count=Math.ceil(lane.route.length/spacing),gap=lane.route.length/count,phase=rng()*gap;
   const colors=OCEAN_VESSELS[kind].colors;
   lane.boats=Array.from({length:count},(_,i)=>({offset:phase+(i+rng()*.60)*gap,color:colors[Math.floor(rng()*colors.length)]}));
@@ -13763,6 +13776,14 @@ function drawMini(elapsed=0){
  for(const c of traffic){
   const px=(lerp(c.prevX,c.x,renderAlpha)-m.left)*m.scale,py=(lerp(c.prevY,c.y,renderAlpha)-m.top)*m.scale;
   if(px>0&&px<w&&py>0&&py<h)mctx.fillRect(px-1.5,py-1.5,3,3);
+ }
+ if(progress.admin.npcs){
+  // Ocean traffic boats get the same white dot as road traffic.
+  const right=m.left+w/m.scale,bottom=m.top+h/m.scale;
+  for(const ocean of oceansInBounds(m.left,m.top,right,bottom))visitOceanBoats(ocean,p=>{
+   const px=(p.x-m.left)*m.scale,py=(p.y-m.top)*m.scale;
+   if(px>0&&px<w&&py>0&&py<h)mctx.fillRect(px-1.5,py-1.5,3,3);
+  });
  }
  for(const c of police){
   const px=(lerp(c.prevX,c.x,renderAlpha)-m.left)*m.scale,py=(lerp(c.prevY,c.y,renderAlpha)-m.top)*m.scale;
