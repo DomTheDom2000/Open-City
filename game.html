@@ -113,13 +113,6 @@ body.hemp-playing .vignette{background:rgba(79,158,73,.12)}
 .trophy-tabs{display:flex;gap:6px;margin-bottom:10px}
 .trophy-tabs button{flex:1;padding:9px 10px;border:1px solid #e4c97840;border-radius:9px;background:#1b3a30;color:#cdd9c5;font-weight:700;font-size:13px}
 .trophy-tabs button[aria-selected="true"]{background:#efd28a;color:#213026;border-color:#efd28a}
-.business-list{display:grid;gap:7px}
-#businessList .business-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;justify-items:start;gap:12px;width:100%;min-height:0;padding:10px 14px;text-align:left}
-#businessList .business-row .business-icon{width:44px;height:44px;margin:0}
-#businessList .business-row .business-main{justify-self:stretch;min-width:0}
-#businessList .business-row .trophy-item-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;justify-self:end;text-align:right;white-space:nowrap}
-.business-main{display:grid;gap:3px;min-width:0}
-.business-rate{font-size:11px;color:#bccfc0}
 .trophy-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
 .trophy-item{position:relative;display:grid;gap:4px;justify-items:center;align-content:center;min-width:0;min-height:116px;padding:8px;color:#e9f0dd;background:#223e34;border:1px solid #c1d4b935;border-radius:10px;text-align:center}
 .trophy-item canvas{display:block;width:88px;height:60px;max-width:100%;object-fit:contain}
@@ -133,6 +126,13 @@ body.hemp-playing .vignette{background:rgba(79,158,73,.12)}
 .trophy-item[data-state="locked"]:hover{border-color:#bac7bd77}
 .trophy-item[data-state="available"]:hover{border-color:#e4c9789c;background:#2d4839}
 .trophy-item[data-state="owned"]{border-color:#e4c97855;background:#243f32}
+.business-card{grid-template-rows:auto minmax(2.4em,auto) auto auto;align-content:start;row-gap:5px;padding:10px 8px}
+.business-card canvas{width:120px;height:auto}
+.business-card .trophy-name{align-self:center}
+.business-card[data-state="locked"] canvas{filter:saturate(.72);opacity:.84}
+.business-rate,#businessIncome{color:#d6e9bc;font-weight:700;font-variant-numeric:tabular-nums}
+.business-rate{font-size:11px}
+.business-card[data-state="locked"] .business-rate{color:#bccfc0}
 .trophy-item.trophy-shake{border-color:#ebb884;animation:trophy-shake .32s ease-in-out}
 .trophy-item.trophy-awarded{animation:trophy-award .85s ease-out}
 .trophy-item.trophy-awarded::after{content:"";position:absolute;inset:5px;border:1px solid #f3d981;border-radius:9px;pointer-events:none;animation:trophy-ring .85s ease-out both}
@@ -296,7 +296,7 @@ body[data-input="gamepad"] .modal :is(button,select,input[type="range"],#atlas):
    </section>
    <section aria-labelledby="businessShopTitle">
     <div class="trophy-section-heading"><h3 id="businessShopTitle">Businesses</h3><span id="businessRemaining"></span></div>
-    <div class="business-list" id="businessList"></div>
+    <div class="trophy-grid" id="businessList"></div>
    </section>
   </div>
  </section>
@@ -5235,44 +5235,31 @@ function renderTrophyRoom(){
  $('trophyShop').innerHTML=available.map(item=>trophyCard(item,false)).join('');
  renderBusinessRoom();
  for(const card of $('trophyDialog').querySelectorAll('[data-trophy-buy],[data-trophy-owned]')){
-  drawTrophyIcon(card.querySelector('canvas').getContext('2d'),card.dataset.trophyBuy||card.dataset.trophyOwned);
+  drawCollectibleIcon(card.querySelector('canvas').getContext('2d'),card.dataset.trophyBuy||card.dataset.trophyOwned,drawTrophyIcon);
  }
 }
 function trophyKmps(rate){return trophyKmFormat.format(rate)+' KM/s';}
-const BUSINESS_ACCENTS=['#e4c978','#c97a5a','#8fb36b','#d9a441','#6fa3c7','#b37fc9','#e07b7b','#7fc9b8','#c9b26b','#9aa8d9','#d98a3a','#f1d992'];
-// Small flat-shaded storefront. Taller buildings for later tiers, with the accent colour on the awning.
-function drawBusinessIcon(canvas,index){
- const g=canvas.getContext('2d'),size=canvas.width;g.clearRect(0,0,size,size);
- const accent=BUSINESS_ACCENTS[index%BUSINESS_ACCENTS.length],wallH=12+Math.min(index,11)*1.6;
- const x=8,width=28,base=40,top=base-wallH;
- g.fillStyle='#16302a';g.beginPath();g.roundRect(0,0,size,size,8);g.fill();
- g.fillStyle='#4d6b5c';g.fillRect(4,base,36,2);
- g.fillStyle='#d9d2bd';g.fillRect(x,top,width,wallH);
- g.fillStyle='#7d4f36';g.fillRect(x-2,top-3,width+4,3);
- g.fillStyle=accent;g.fillRect(x+2,top+2,width-4,4);
- if(wallH>=20){
-  g.fillStyle='#8fb7c4';g.fillRect(x+4,top+8,6,4);g.fillRect(x+width-10,top+8,6,4);
- }
- g.fillStyle='#4b3a2c';g.fillRect(x+width/2-3,base-7,6,7);
-}
-function businessRow(item,owned){
- const affordableNow=affordable(item.price),state=owned?'owned':affordableNow?'available':'locked';
+function businessCard(item,owned){
+ const state=owned?'owned':affordable(item.price)?'available':'locked';
  const tag=owned?'article':'button';
  const controls=owned?'tabindex="-1" data-business-owned':'type="button" data-business-buy';
- return '<'+tag+' class="trophy-item business-row" data-state="'+state+'" '+controls+'="'+item.id+'">'+
-  '<canvas class="business-icon" width="44" height="44" aria-hidden="true"></canvas>'+
-  '<span class="business-main"><strong class="trophy-name">'+item.name+'</strong>'+
-  '<span class="business-rate">'+trophyKmps(item.kmps)+'</span></span>'+
+ return '<'+tag+' class="trophy-item business-card" data-state="'+state+'" '+controls+'="'+item.id+'">'+
+  '<canvas width="224" height="152" aria-hidden="true"></canvas>'+
+  '<strong class="trophy-name">'+item.name+'</strong>'+
+  '<span class="business-rate">'+trophyKmps(item.kmps)+'</span>'+
   '<span class="trophy-item-meta"><span class="trophy-price">'+trophyKm(item.price)+'</span>'+
-  '<span class="trophy-state">'+(owned?'Earning':affordableNow?'Available':'Locked')+'</span></span></'+tag+'>';
+  '<span class="trophy-state">'+(owned?'Earning':state==='available'?'Available':'Locked')+'</span></span></'+tag+'>';
 }
 function renderBusinessRoom(){
  const ownedCount=progress.ownedBusinesses.length;
  $('businessIncome').textContent=trophyKmps(businessKmps());
  $('businessEmpty').hidden=ownedCount>0;
  $('businessRemaining').textContent=ownedCount<BUSINESSES.length?(BUSINESSES.length-ownedCount)+' to buy':'All businesses owned';
- $('businessList').innerHTML=BUSINESSES.map(item=>businessRow(item,progress.ownedBusinesses.includes(item.id))).join('');
- [...$('businessList').querySelectorAll('canvas')].forEach((canvas,index)=>drawBusinessIcon(canvas,index));
+ const list=$('businessList');
+ list.innerHTML=BUSINESSES.map(item=>businessCard(item,progress.ownedBusinesses.includes(item.id))).join('');
+ for(const card of list.children){
+  drawCollectibleIcon(card.querySelector('canvas').getContext('2d'),card.dataset.businessBuy||card.dataset.businessOwned,drawBusinessIcon);
+ }
 }
 function setTrophyTab(tab){
  const businesses=tab==='businesses';
@@ -5338,7 +5325,7 @@ function confirmTrophyPurchase(){
  playGameSound('trophy');
  return true;
 }
-function drawTrophyIcon(g,id){
+function drawCollectibleIcon(g,id,draw){
  g.save();g.setTransform(2,0,0,2,112,76);g.clearRect(-56,-38,112,76);
  const path=(vertices)=>{
   g.beginPath();g.moveTo(vertices[0],vertices[1]);
@@ -5348,6 +5335,11 @@ function drawTrophyIcon(g,id){
  const round=(color,x,y,w,h,r=2)=>{g.fillStyle=color;g.beginPath();g.roundRect(x,y,w,h,r);g.fill();};
  const oval=(color,x,y,rx,ry)=>{g.fillStyle=color;g.beginPath();g.ellipse(x,y,rx,ry,0,0,TAU);g.fill();};
  const line=(color,width,...vertices)=>{path(vertices);g.strokeStyle=color;g.lineWidth=width;g.stroke();};
+ oval('#0c27298c',0,26,37,5);
+ draw(g,id,{shape,round,oval,line});
+ g.restore();
+}
+function drawTrophyIcon(g,id,{shape,round,oval,line}){
  const bar=(x,y,metal=false)=>{
   g.save();g.translate(x,y);
   shape(metal?'#768e95':'#aa7337',-24,5,19,5,28,-4,23,13,-26,13);
@@ -5356,7 +5348,6 @@ function drawTrophyIcon(g,id){
   round(metal?'#c6d7d5':'#dbb05c',-10,-6,23,4,1);
   g.restore();
  };
- oval('#0c27298c',0,26,37,5);
  switch(id){
   case 'gold-bar':bar(0,-2);break;
   case 'gold-stack':bar(-12,8);bar(13,3);bar(-1,-11);break;
@@ -5425,7 +5416,226 @@ function drawTrophyIcon(g,id){
    oval('#548894',0,-6,5.5,5.5);
    shape('#e49a5d',-7,19,7,19,0,33);shape('#ffe1a0',-3,19,3,19,0,28);break;
  }
- g.restore();
+}
+function drawBusinessIcon(g,id,{shape,round,oval,line}){
+ g.lineCap='round';g.lineJoin='round';
+ switch(id){
+  case 'post-office':
+   round('#806e50',-25,4,7,21,1);round('#ba9e69',-25,4,3,21,1);
+   round('#4c8088',-36,-23,55,33,12);
+   round('#416972',-36,-7,55,17,2);
+   g.beginPath();g.moveTo(-36,9);g.lineTo(-36,-9);
+   g.bezierCurveTo(-36,-28,-8,-28,-8,-9);g.lineTo(-8,9);g.closePath();
+   g.fillStyle='#83aeb0';g.fill();
+   round('#294d56',-31,-9,18,4,1);
+   line('#acd0c7',1.4,-14,-20,5,-20,11,-18);
+   line('#e2ae79',2.3,7,-4,7,-27);
+   shape('#dd8062',7,-27,20,-27,17,-20,7,-20);
+   oval('#d9b07d',7,-4,2.8,2.8);
+   g.save();g.translate(16,10);g.rotate(.16);
+   round('#b99766',-20,-11,41,24,3);
+   round('#f2e3bd',-20,-12,39,22,3);
+   line('#d8bc87',1.3,-18,8,-10,1);line('#d8bc87',1.3,17,8,9,1);
+   line('#bf9d6e',1.6,-19,-9,0,3,18,-9);
+   oval('#bc6f54',0,3,3.2,3.2);oval('#ed9c75',-.8,2.1,1.2,1.2);
+   g.restore();
+   break;
+  case 'bakery':{
+   shape('#825e45',-39,19,-27,13,24,13,37,19,33,25,-35,25);
+   shape('#b88858',-39,19,-27,13,24,13,37,19,30,22,-33,22);
+   const baguette=(x,y,angle,crust,edge)=>{
+    g.save();g.translate(x,y);g.rotate(angle);
+    round(edge,-9,-27,18,54,9);
+    round(crust,-9,-27,14,51,7);
+    line('#f9d38a',1.4,-5,-17,-5,-21,-2,-24);
+    for(const cut of [-12,-1,10]){
+     shape('#a66139',-5,cut+2,2,cut-4,6,cut-4,1,cut+2);
+     line('#f9d38a',1.3,-5,cut+3,1,cut+2,6,cut-4);
+    }
+    g.restore();
+   };
+   baguette(12,-1,.55,'#d99b56','#ab653e');
+   baguette(-10,1,.7,'#edb765','#ba7845');
+   break;
+  }
+  case 'grocery-store':
+   g.beginPath();g.moveTo(-26,1);g.bezierCurveTo(-28,-33,26,-34,27,1);
+   g.strokeStyle='#c9a46e';g.lineWidth=3;g.stroke();
+   shape('#e59c54',-11,-15,4,-23,10,-17,-2,9);
+   shape('#88b384',1,-21,4,-34,9,-29,8,-20,14,-27,17,-23,9,-16);
+   line('#b46e48',1.1,-9,-12,-4,-9,-5,-7,0,-4);
+   shape('#689773',16,2,17,-15,22,-20,24,-11,29,-18,33,-16,29,-1);
+   oval('#a75745',-18,-6,12,11);oval('#db8263',-21,-8,8,8);
+   line('#6e5743',2,-17,-15,-16,-21);shape('#a7c68e',-16,-17,-10,-23,-5,-21,-9,-17);
+   shape('#346561',-35,-4,35,-4,25,22,-25,22);
+   shape('#64977e',-35,-4,12,-4,9,22,-25,22);
+   for(const x of [-24,-13,-2,9,20])round('#254f4e',x,5,4,11,2);
+   round('#91bb9b',-37,-7,74,7,3);
+   line('#b3caa6',1.2,-32,-5,30,-5);
+   break;
+  case 'gas-station':
+   g.beginPath();g.moveTo(11,-16);g.bezierCurveTo(34,-20,41,23,24,23);
+   g.bezierCurveTo(15,23,17,11,22,4);g.strokeStyle='#102e30';g.lineWidth=4.4;g.stroke();
+   round('#766954',-35,21,68,5,2);
+   round('#a35345',-26,-28,40,50,6);
+   round('#e6d7b6',-26,-28,34,39,6);
+   round('#cb745b',-26,7,34,15,2);
+   round('#34595c',-21,-22,24,17,3);
+   shape('#638783',-20,-20,-7,-20,-15,-7,-20,-7);
+   line('#f4dfa6',1.4,-16,-14,-13,-17,-7,-17,-3,-14);
+   line('#df946a',1.8,-10,-10,-5,-15);
+   round('#f4e2bd',-17,12,16,4,1);
+   shape('#557477',15,-5,21,-9,26,-4,24,6,20,6,20,0);
+   line('#bdd2be',2,20,-8,17,-14,12,-14);
+   break;
+  case 'car-dealership':
+   shape('#34575b',-43,9,45,7,44,17,35,21,-38,20,-44,16);
+   for(const x of [-27,24]){
+    oval('#1f3537',x,16,8,9);oval('#90a7a2',x,16,4.5,5);oval('#456265',x,16,2,2.3);
+   }
+   shape('#ae5b54',-45,5,-35,-1,-19,-4,-8,-18,14,-19,29,-7,41,-4,46,4,44,14,34,16,32,10,27,7,21,7,16,11,15,17,-18,17,-19,11,-24,7,-31,7,-36,12,-38,17,-44,14);
+   shape('#e38a72',-45,5,-35,-1,-19,-4,-8,-18,14,-19,29,-7,41,-4,45,3,34,6,17,5,-16,6,-37,6);
+   shape('#355e69',-16,-3,-6,-15,7,-16,4,-5);
+   shape('#58868a',7,-5,10,-16,14,-16,25,-7,18,-4);
+   line('#a8c7c3',1.2,12,-14,19,-8);
+   line('#ebae8d',1.8,-37,3,-16,2,17,1,31,4);
+   line('#753f3c',1.3,-9,0,-8,14);
+   round('#f9e4ab',35,6,8,4,1);round('#593f3e',38,11,7,3,1);
+   line('#c1c8bb',1.7,35,16,43,14,45,12);
+   break;
+  case 'logistics-depot':
+   round('#385157',-39,7,83,10,3);
+   for(const x of [-24,28]){
+    oval('#20363a',x,16,8,9);oval('#9ab0ac',x,16,4,4.5);
+   }
+   shape('#427b71',11,-13,29,-13,38,-5,45,1,45,14,37,16,35,10,30,7,24,7,19,11,18,16,11,16);
+   shape('#8eb9a3',12,-13,28,-13,38,-5,44,1,34,3,12,0);
+   shape('#3a5f68',18,-9,28,-9,35,-3,33,0,18,-1);
+   line('#639499',1.2,20,-7,25,-7,31,-2);
+   round('#eee2ae',38,5,6,4,1);line('#c0d0c5',2,37,14,45,12);
+   shape('#b0c3b5',-42,-17,-34,-24,10,-24,16,-18,16,6,10,10,-42,10);
+   shape('#e5e4cb',-42,-17,10,-17,10,10,-42,10);
+   shape('#f3edda',-42,-17,-34,-24,10,-24,16,-18,10,-17);
+   round('#6f9b88',-37,-12,4,17,1);
+   shape('#b67c48',-24,-8,-18,-12,-7,-12,-1,-8,-1,1,-24,1);
+   shape('#efc37f',-24,-8,-18,-12,-7,-12,-1,-8);
+   round('#f7dc9c',-15,-8,5,5,.5);
+   line('#8c9f92',1.2,-39,7,7,7);
+   break;
+  case 'oil-field':
+   round('#8f8061',-42,21,86,5,2);
+   shape('#687268',-16,21,-5,-12,4,-12,17,21,10,21,-.5,-6,-9,21);
+   line('#53645d',2,-12,18,8,8,-5,0);
+   line('#acc0a3',1.5,-14,19,-4,-10);
+   line('#56625e',2.5,-22,-3,-23,11,-8,16);
+   oval('#87755b',-20,11,7,6);oval('#d6a869',-20,11,2.2,2.2);
+   shape('#bb7650',-30,-5,23,-24,28,-19,-28,2);
+   line('#e3a26a',1.6,-28,-5,22,-23);
+   oval('#e2bb79',0,-12,3.5,3.5);
+   shape('#a95744',21,-22,24,-28,32,-26,38,-16,38,-2,32,4,29,-7,23,-11);
+   line('#dc8a61',2,26,-26,31,-24,36,-16);
+   line('#c7b492',1.3,34,0,34,20);
+   round('#406774',-39,8,15,16,2);oval('#789da3',-31.5,8,7.5,2.7);
+   line('#99bec0',1.2,-38,13,-25,13);line('#99bec0',1.2,-38,20,-25,20);
+   break;
+  case 'airport':
+   shape('#476160',-48,21,-26,8,48,8,25,29,-48,29);
+   line('#81908a',1.2,-46,23,-24,10,44,10);
+   for(const x of [-31,-15,1,17])line('#d0d2b8',1.7,x,20,x+8,20);
+   line('#c7b07b',1.3,-46,27,24,27,46,9);
+   g.save();g.translate(1,-6);g.rotate(-.32);
+   shape('#85a9ae',10,-2,-15,-23,-23,-23,-11,-1,-12,3,-22,22,-14,22,10,3);
+   shape('#c2d6ce',10,1,-14,22,-22,22,-11,2);
+   shape('#d58d6f',-23,-23,-18,-23,-16,-19,-21,-19);
+   shape('#bb6e59',-22,22,-19,17,-14,17,-14,22);
+   shape('#c7cac2',-26,-1,-38,-13,-32,-15,-16,-1,-20,4,-36,10,-40,8);
+   round('#4b7179',-12,-10,14,5,2);round('#597f86',-13,7,15,5,2);
+   shape('#eaeadd',-41,-1,-31,-4,28,-5,37,-3,44,0,37,4,26,5,-30,4);
+   shape('#bd735e',-40,-1,-33,-4,-23,-4,-27,2,-35,2);
+   line('#547e84',1.5,-25,2,32,2);line('#3f6674',2.4,31,-3,36,-1);
+   for(const x of [-18,-11,-4,3,10,17,24])oval('#719ba0',x,-.7,1.1,1.1);
+   g.restore();
+   break;
+  case 'shipping-port':{
+   oval('#4d8388',0,21,46,7);
+   const container=(x,y,w,face,roof,rib)=>{
+    shape(roof,x,y,x+4,y-3,x+w+4,y-3,x+w,y);
+    round(face,x,y,w,9,1);
+    for(let r=x+4;r<x+w-1;r+=4)line(rib,1,r,y+2,r,y+7);
+   };
+   line('#e6dfbc',1.4,-33,-10,-33,-21,-27,-21);
+   round('#dce2cb',-39,-13,15,20,1);round('#689697',-38,-10,13,4,1);
+   round('#b67559',-34,-17,5,5,1);
+   container(-13,-15,23,'#67988e','#9bc1a9','#427d7a');
+   container(10,-11,23,'#d5a05f','#e3bb7c','#aa764a');
+   container(-24,-5,24,'#c4785d','#e4a585','#a25546');
+   container(0,-5,36,'#789fa2','#a9c8bb','#48767f');
+   shape('#305460',-46,5,44,3,35,14,24,20,-34,20,-42,14);
+   shape('#ba7158',-40,14,35,14,24,20,-34,20);
+   line('#d8d8be',1.6,-45,6,40,4);
+   line('#a1c4ba',1.4,-43,22,-23,22,-17,24,9,24);
+   line('#a1c4ba',1.2,20,23,31,23,40,20,45,20);
+   break;
+  }
+  case 'major-corporation':
+   line('#674d3c',5,-21,-17,-19,-27,1,-27,4,-17);
+   line('#bb9868',1.4,-20,-19,-18,-28,1,-28);
+   round('#513c36',-37,-19,64,43,5);
+   round('#93634f',-37,-19,61,40,5);
+   round('#b78763',-37,-19,61,20,5);
+   line('#d2ae79',1.5,-33,-15,20,-15);
+   round('#654837',-37,-1,60,2,1);
+   for(const x of [-25,9]){
+    round('#e2bf7c',x,-4,7,9,1);round('#976849',x+2,-.5,3,2,1);
+   }
+   g.save();g.translate(21,9);g.rotate(.18);
+   shape('#9f9e7c',-12,-14,19,-14,19,17,-12,17);
+   shape('#e9e2bd',-13,-15,12,-15,18,-9,18,15,-13,15);
+   shape('#c8c3a1',12,-15,12,-9,18,-9);
+   line('#b6b79b',1.2,-9,10,13,10);
+   for(const [x,h] of [[-8,4],[-1,8],[6,13]])round('#71977a',x,9-h,4,h,.7);
+   line('#3b736a',1.7,-9,2,-4,-2,1,-1,9,-8);line('#3b736a',1.7,5,-8,9,-8,9,-4);
+   g.restore();
+   break;
+  case 'orbital-launch':
+   round('#61776e',-39,19,76,6,2);
+   line('#617a71',3,-32,19,-32,-22,-17,-22,-17,19);
+   line('#9eb2a1',1.6,-31,18,-18,7,-31,-3,-18,-13,-31,-21);
+   line('#9eb2a1',1.7,-17,-13,2,-13);line('#9eb2a1',1.7,-17,0,2,0);
+   oval('#c2cbc0',-12,24,13,4);oval('#a0b9ae',22,25,15,5);
+   shape('#e99b61',0,15,17,15,13,24,8,34,4,25);
+   shape('#ffe2a1',5,15,12,15,8,27);
+   shape('#9eaa9f',-6,15,-6,2,-2,-8,2,2,2,17);
+   shape('#d0d5be',16,17,16,0,21,-9,26,1,26,15);
+   round('#ce8065',-6,10,8,4,1);round('#ce8065',18,10,8,4,1);
+   shape('#e9e8cf',0,14,0,-17,4,-27,9,-34,14,-27,18,-17,18,14);
+   shape('#b9c6b8',12,14,12,-22,9,-34,14,-27,18,-17,18,14);
+   shape('#c5775e',4,-27,9,-34,14,-27);
+   round('#3e727d',4,-20,9,6,2);line('#8eafb0',1.2,6,-18,10,-18);
+   round('#c87e5f',0,1,18,5,1);round('#8d9c91',2,12,14,5,1);
+   break;
+  case 'sovereign-fund':{
+   round('#99743e',-18,8,12,13,2);
+   oval('#987044',-12,23,20,4);oval('#deb774',-12,21,18,3.4);
+   oval('#ab864c',-12,-8,24,22);
+   oval('#efcb80',-12,-9,22,21);oval('#437a76',-12,-9,19.5,18.5);
+   shape('#bdba85',-28,-16,-23,-23,-14,-24,-12,-20,-17,-14,-20,-12,-18,-9,-23,-9);
+   shape('#cfc391',-20,-7,-14,-7,-10,-2,-13,4,-17,8,-18,2,-21,-2);
+   shape('#dbce94',-9,-19,-2,-24,4,-19,7,-12,1,-8,-3,-11,-6,-9,-11,-12);
+   shape('#c6bf85',-8,-9,-2,-8,-1,-2,-4,2,-7,-1,-8,-6);
+   g.beginPath();g.ellipse(-12,-9,10,18,0,0,TAU);
+   g.strokeStyle='#e6d09665';g.lineWidth=1;g.stroke();
+   line('#e6d09665',1,-31,-9,7,-9);
+   const coins=(x,y,rx,height)=>{
+    round('#b7894b',x-rx,y-height,rx*2,height+1,2);
+    for(let band=y-3;band>y-height;band-=4)oval('#e0b366',x,band,rx,2.2);
+    oval('#f5d38c',x,y-height,rx,3.4);
+    oval('#d7ab60',x,y-height,rx*.68,1.8);
+   };
+   coins(23,23,11,17);coins(36,25,8.5,10);
+   break;
+  }
+ }
 }
 function progressSnapshot(){
  const snapshot={...progress,position:{x:player.x,y:player.y,angle:player.angle}};
