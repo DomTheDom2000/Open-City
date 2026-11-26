@@ -1146,6 +1146,16 @@ function oceanWaterAt(x,y){
  const ocean=oceanAtCell(roadIndex(x,0),roadIndex(y,1)),w=ocean?.water;
  return w&&x>=w.left&&x<=w.right&&y>=w.top&&y<=w.bottom?ocean:null;
 }
+const FARM_MODE_RANGE=260;
+function farmModeNearby(x,y){
+ for(const s of activeScenes.values()){
+  const farm=s.farmBusiness;
+  if(!farm||!progress.farms[farm.key])continue;
+  if(Math.hypot(x-clamp(x,s.x,s.x+s.w),y-clamp(y,s.y,s.y+s.h))<=FARM_MODE_RANGE)return true;
+ }
+ return false;
+}
+function farmModeAvailable(){return progress.mode==='farm'||farmModeNearby(player.x,player.y);}
 function oceanLaunchNearby(x,y){
  const range=BOAT_LAUNCH_RANGE;
  let closest=null,best=range;
@@ -6635,7 +6645,7 @@ function installModeVehicle(){Object.assign(player,modeVehicle());}
 function setGameMode(mode,announce=true){
  if(!Object.hasOwn(GAME_MODES,mode)||mode===progress.mode)return false;
  if(mode==='race'&&progress.admin.racing===false)return false;
- if(mode==='farm'&&!Object.keys(progress.farms).length)return false;
+ if(mode==='farm'&&!farmModeAvailable())return false;
  if(mode==='police'&&progress.admin.police!==true)return false;
  const candidate={...player,...modeVehicle(mode)},oldPos={x:player.x,y:player.y};let placement=null;
  const leavingRail=progress.mode==='train',leavingBoat=!!activeBoat();
@@ -6678,7 +6688,7 @@ function setGameMode(mode,announce=true){
  return true;
 }
 // Street Racing and Police chase can be hidden from the admin panel; every mode list goes through this.
-function visibleModeOrder(){return MODE_ORDER.filter(id=>(id!=='race'||progress.admin.racing!==false)&&(id!=='police'||progress.admin.police===true)&&(id!=='farm'||Object.keys(progress.farms).length));}
+function visibleModeOrder(){return MODE_ORDER.filter(id=>(id!=='race'||progress.admin.racing!==false)&&(id!=='police'||progress.admin.police===true)&&(id!=='farm'||farmModeAvailable()));}
 function nextCycleMode(){
  const order=visibleModeOrder().filter(mode=>mode!=='farm');
  return order[(order.indexOf(progress.mode)+1)%order.length];
@@ -8970,7 +8980,7 @@ function updateBoat(dt,v){
  if(braking||reverse&&forward>.006){
   forward=Math.sign(forward)*Math.max(0,Math.abs(forward)-v.brake*dt*(braking?1.65:reverse));
  }else forward+=(throttle-reverse*.62)*v.accel*dt;
- forward=clamp(forward*Math.pow(.986,dt/16),-v.maxSpeed*.32,v.maxSpeed);
+ forward=clamp(forward*Math.pow(PLAYER_BOAT_COAST_DRAG,dt/16),-v.maxSpeed*.32,v.maxSpeed);
  const steering=Math.min(1,Math.abs(forward)/.082),direction=forward<0?-1:1;
  player.angle+=steeringInput()*v.turn*steering*direction*dt;
  side*=Math.pow(braking?.75:.94,dt/16);
@@ -9003,6 +9013,8 @@ function oceanBoatBlockedAhead(p,vessel,reach){
  });
 }
 const BOAT_BRAKE_MS=800,BOAT_RESUME_MS=1200;
+// Player boat forward drag per 16ms frame. Lower drag = longer glide after throttle release. Player boats only (updateBoat).
+const PLAYER_BOAT_COAST_DRAG=.994;
 function makeOceanLane(ocean,area,inset,kind,speed,spacing,reverse,avoidPlayer=false){
  const {left,right,top,bottom}=area,vessel=OCEAN_VESSELS[kind];
  const points=[{x:left+inset,y:top+inset},{x:right-inset,y:top+inset},
@@ -10426,13 +10438,13 @@ function drawFarmBusinessWorld(){
     textAt((field.index+1)+' · '+title,x,y,8,'#fff1ce');
    }
   }
-  // The loaded-corn pickup only shows during the farm job; the silo itself always shows.
-  if(!farm.isYard||!visible(farm.loading.x,farm.loading.y,65)||(owned?.grain&&progress.mode!=='farm'))continue;
+  // The silo bay only shows during the farm job, and once owned only when corn is ready to pick up.
+  if(!farm.isYard||progress.mode!=='farm'||(owned&&!(owned.grain>0))||!visible(farm.loading.x,farm.loading.y,65))continue;
   const {x,y,hw,hh}=farm.loading;
   ctx.save();ctx.translate(x,y);
-  rect(-hw,-hh,hw*2,hh*2,owned?.grain?'#d65cff33':'#79634931');
-  ctx.strokeStyle=owned?.grain?JOB_ROUTE_COLOR:'#d8bd83';ctx.lineWidth=owned?3:2;
-  ctx.setLineDash([8,5]);ctx.strokeRect(-hw,-hh,hw*2,hh*2);ctx.restore();
+  rect(-hw,-hh,hw*2,hh*2,owned?'#d65cff33':'#79634931');
+  ctx.strokeStyle=owned?JOB_ROUTE_COLOR:'#d8bd83';ctx.lineWidth=owned?3:2;
+  ctx.setLineDash(owned?[7,4]:[8,5]);ctx.strokeRect(-hw,-hh,hw*2,hh*2);ctx.restore();
   textAt(owned?.grain?'LOAD CORN':'GRAIN SILO',x,y-hh-7,9,'#fff1ce');
   if(!owned)textAt('FOR SALE · '+FARM_PRICE_KM+' KM',x,y+hh+15,9,'#fff1ce');
  }
